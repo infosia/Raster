@@ -20,10 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "pch.h"
-#include "renderer/loader.h"
-#include "renderer/render.h"
-#include "renderer/scene.h"
+#include "raster.h"
 
 #include <CLI11.hpp>
 #include <json.hpp>
