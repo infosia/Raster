@@ -179,6 +179,15 @@ namespace renderer
             return res;
         }
 
+        Color operator+(const uint8_t value) const
+        {
+            Color res = *this;
+            const uint8_t clamped = std::min(255, (int)value);
+            for (int i = 0; i < 3; i++) // This does not change alpha color
+                res.rgba[i] = std::min(255, rgba[i] + clamped);
+            return res;
+        }
+
     private:
         uint8_t rgba[4]{ 0, 0, 0, 255 };
     };

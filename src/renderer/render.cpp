@@ -223,6 +223,7 @@ namespace renderer
         ctx.view = getViewMatrix(camera);
         ctx.model = getModelMatrix(model);
         ctx.bgColor = Color(255, 255, 255, 255);
+        ctx.cameraPos = camera.translation;
 
         ctx.zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
         ctx.framebuffer->reset(width, height, Image::Format::RGB);

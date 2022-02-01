@@ -4,7 +4,21 @@ A software renderer which does not require any GPU resources and works without V
 
 **[[[Work In Progress]]]**
 
-## Usage (standalone renderer)
+## Features
+
+- [x] glTF (.glb) as input
+- [x] VRM as input
+- [x] PNG output
+- [x] Write shader in C++
+- [x] Backface culling
+- [x] Vertex skinning
+- [x] Tangent space normal mapping
+- [x] Orbital camera control
+- [x] Inverted hull outline
+- [ ] MToon shading
+- [ ] SSAA (anti-alias)
+
+## Usage (Standalone renderer)
 
 ```
 > Raster --input INPUT.glb --output OUTPUT.png
@@ -17,9 +31,9 @@ A software renderer which does not require any GPU resources and works without V
 * `--output` Output file name
 * `--config`: Configuration file (JSON)
 
-# Usage (As a library)
+## Usage (As a library)
 
-Raster is built to be integrated with applications of your choice as an external library. Raster has easy to use API that enables you to show 3D models as an image, without any GPU dependencies such as Vulkan and OpenGL.
+Raster is built to be integrated with applications of your choice as an external library. Raster has easy to use API that enables you to view 3D models as an image, without any GPU dependencies such as Vulkan and OpenGL.
 
 ```c++
 #include "raster.h"

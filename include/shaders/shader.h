@@ -38,7 +38,8 @@ namespace renderer
         glm::mat4 view{ glm::mat4(1.f) };
         glm::mat4 viewport{ glm::mat4(1.f) };
         glm::mat4 projection{ glm::mat4(1.f) };
-        glm::vec4 lightPos{ glm::vec4(0.0f, 1.5f, 1.f, 0.f) };
+        glm::vec3 lightPos{ glm::vec3(0.0f, 1.5f, 1.f) };
+        glm::vec3 cameraPos { glm::vec3() };
 
         Image *framebuffer{ nullptr };
         std::vector<float> zbuffer;
@@ -116,11 +117,10 @@ namespace renderer
 
     struct DefaultShader : Shader
     {
+        glm::mat3x3 vPosition;
         glm::mat3x3 vNormal;
         glm::mat4x3 vTangent;
         glm::mat3x2 vUV;
-        glm::vec3 vLightVec;
-        glm::vec3 vViewVec;
 
         DefaultShader()
             : vNormal(glm::mat3x3())
@@ -134,23 +134,22 @@ namespace renderer
             assert(primitive != nullptr);
 
             const auto vert = primitive->vert(iface, ivert);
-            const glm::mat4 skinMat = skinning(ctx, iface, ivert);
+            const glm::mat4 skinMat4 = ctx.model * skinning(ctx, iface, ivert);
+            const glm::mat3 skinMat3 = glm::mat3(skinMat4);
 
-            auto gl_Position = glm::project(vert, ctx.view * ctx.model * skinMat, ctx.projection,
+            auto gl_Position = glm::project(vert, ctx.view * skinMat4, ctx.projection,
                 glm::vec4{ 0.0f, 0.0f, ctx.framebuffer->width, ctx.framebuffer->height });
 
             if (primitive->hasNormal())
-                vNormal[ivert] = primitive->normal(iface, ivert) * glm::mat3(ctx.model * skinMat);
+                vNormal[ivert] = primitive->normal(iface, ivert) * skinMat3;
 
             if (primitive->hasTangent())
-                vTangent[ivert] = primitive->tangent(iface, ivert) * glm::mat3(ctx.model * skinMat);
+                vTangent[ivert] = primitive->tangent(iface, ivert) * skinMat3;
 
             if (primitive->hasUV())
                 vUV[ivert] = primitive->uv(iface, ivert);
 
-            glm::vec4 pos = ctx.model * glm::vec4(vert, 1.f);
-            vLightVec = glm::vec3(ctx.lightPos) - glm::vec3(pos);
-            vViewVec = -glm::vec3(pos);
+            vPosition[ivert] = vert * skinMat3;
 
             return glm::vec4(gl_Position, 1.f);
         }
@@ -161,6 +160,9 @@ namespace renderer
 
             const auto inNormal = vNormal * bar;
             const auto inTangent = vTangent * glm::vec4(bar, 1.f);
+            const auto inPosition = vPosition * bar;
+            const auto lightDir = glm::normalize(ctx.lightPos - inPosition);
+            const auto viewDir = glm::normalize(ctx.cameraPos - inPosition);
 
             if (primitive->material) {
                 const auto material = primitive->material;
@@ -179,6 +181,8 @@ namespace renderer
 
                     if (!material->unlit) {
                         auto N = glm::normalize(inNormal);
+                        const auto L = glm::normalize(lightDir);
+                        uint8_t specular = 0;
 
                         if (primitive->hasTangent() && material->normalTexture) {
                             const auto T0 = glm::normalize(inTangent);
@@ -190,16 +194,13 @@ namespace renderer
                             const auto normalMap = image->get(UV.x * image->width, UV.y * image->height);
                             N = glm::normalize(TBN * normalMap.toNormal());
 
-                            //const auto V = glm::normalize(vViewVec);
-                            //const auto R = reflect(-L, N);
-                            //const auto specular = std::pow(std::fmax(glm::dot(R, V), 0.f), 32.0f);
+                            specular = std::fmin(255.f, std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), 16.0f) * 255.f);
                         }
 
-                        const auto L = glm::normalize(vLightVec);
                         const auto DF = std::fmin(1.f, std::fmax(glm::dot(N, L), 0.7f));
 
                         if (DF > 0) {
-                            Color newColor(diffuse * DF, diffuse.A());
+                            Color newColor(diffuse * DF + specular, diffuse.A());
                             color.copy(newColor);
                         }
                     }
