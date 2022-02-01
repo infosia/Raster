@@ -28,9 +28,10 @@
 namespace renderer
 {
     struct Shader;
-    struct Color;
+    class Color;
     struct ShaderContext
     {
+        ShaderContext() = default;
         ShaderContext(const ShaderContext &) = delete;
         ShaderContext &operator=(const ShaderContext &) = delete;
 

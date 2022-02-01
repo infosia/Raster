@@ -44,8 +44,8 @@ namespace renderer
 
         dst->reset(src->width / kernelSize, src->height / kernelSize, src->format);
 
-        for (int x = 0; x < dst->width; ++x) {
-            for (int y = 0; y < dst->height; ++y) {
+        for (uint32_t x = 0; x < dst->width; ++x) {
+            for (uint32_t y = 0; y < dst->height; ++y) {
                 uint32_t xx = x * kernelSize;
                 uint32_t yy = y * kernelSize;
                 uint32_t R = 0, G = 0, B = 0;
@@ -143,7 +143,7 @@ namespace renderer
         return nullptr;
     }
 
-    inline void drawBB(Shader *shader, ShaderContext &ctx, glm::uvec4 &bbox, const glm::vec3 tri[3], glm::vec3 depths)
+    inline void drawBB(Shader *shader, ShaderContext &ctx, const glm::uvec4 &bbox, const glm::vec3 tri[3], glm::vec3 depths)
     {
         for (auto y = bbox.y; y != bbox.w + 1; ++y) {
             for (auto x = bbox.x; x != bbox.z + 1; ++x) {
@@ -172,10 +172,10 @@ namespace renderer
             if (options.verbose && !node->name.empty())
                 std::cout << "[INFO] Rendering " << node->name << std::endl;
 
-            for (const auto primitive : node->mesh->primitives) {
+            for (const auto &primitive : node->mesh->primitives) {
                 shader->primitive = &primitive;
                 const uint32_t num_faces = primitive.numFaces();
-                for (int i = 0; i < num_faces; i++) {
+                for (uint32_t i = 0; i < num_faces; i++) {
                     glm::vec3 tri[3] = {
                         shader->vertex(ctx, i, 0),
                         shader->vertex(ctx, i, 1),
@@ -201,7 +201,7 @@ namespace renderer
 
     bool render(Scene &scene, Image &framebuffer)
     {
-        ShaderContext ctx = {};
+        ShaderContext ctx;
 
         ctx.framebuffer = &framebuffer;
 

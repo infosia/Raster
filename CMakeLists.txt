@@ -43,7 +43,7 @@ if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   set_directory_properties(PROPERTIES VS_STARTUP_PROJECT ${EXE_NAME})
 else()
-    target_compile_options(${EXE_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
+    target_compile_options(${EXE_NAME} PRIVATE -Wall -Wextra -pedantic)
 endif()
 
 install(TARGETS ${EXE_NAME} RUNTIME DESTINATION bin)
