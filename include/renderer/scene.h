@@ -179,12 +179,12 @@ namespace renderer
             return res;
         }
 
-        Color operator+(const uint8_t value) const
+        Color operator+(Color &c) const
         {
             Color res = *this;
-            const uint8_t clamped = std::min(255, (int)value);
-            for (int i = 0; i < 3; i++) // This does not change alpha color
-                res.rgba[i] = std::min(255, rgba[i] + clamped);
+            const auto buffer = c.buffer();
+            for (int i = 0; i < 4; i++)
+                res.rgba[i] = std::min(255, rgba[i] + buffer[i]);
             return res;
         }
 
@@ -219,6 +219,7 @@ namespace renderer
         Texture *normalTexture{ nullptr };
         AlphaMode alphaMode{ AlphaMode::Opaque };
         float alphaCutOff{ 0.f };
+        float specularFactor { 1.f };
         bool doubleSided{ false };
         bool unlit{ false };
     };

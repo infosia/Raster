@@ -164,6 +164,10 @@ namespace renderer
                 material->normalTexture = &scene->textures.at(ctexture - data->textures);
         }
 
+        if (cmat->has_specular) {
+            material->specularFactor = cmat->specular.specular_factor;
+        }
+
         material->doubleSided = cmat->double_sided;
         material->alphaMode = getAlphaMode(cmat->alpha_mode);
         material->alphaCutOff = cmat->alpha_cutoff;

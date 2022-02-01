@@ -15,6 +15,7 @@ A software renderer which does not require any GPU resources and works without V
 - [x] Tangent space normal mapping
 - [x] Orbital camera control
 - [x] Inverted hull outline
+- [x] Blinn-Phong reflection
 - [ ] MToon shading
 - [ ] SSAA (anti-alias)
 

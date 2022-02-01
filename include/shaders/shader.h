@@ -46,7 +46,11 @@ namespace renderer
 
         const glm::mat4 *jointMatrices{ nullptr };
 
-        Color bgColor;
+        Color bgColor { 255, 255, 255, 255 };
+        Color lightColor { 255, 255, 255, 255 };
+
+        // Max limit of shading color changes
+        float maxShadingFactor = 0.7f;
     };
 
     struct Shader
@@ -163,6 +167,7 @@ namespace renderer
             const auto inPosition = vPosition * bar;
             const auto lightDir = glm::normalize(ctx.lightPos - inPosition);
             const auto viewDir = glm::normalize(ctx.cameraPos - inPosition);
+            const auto halfDir = glm::normalize(lightDir - viewDir);
 
             if (primitive->material) {
                 const auto material = primitive->material;
@@ -182,7 +187,8 @@ namespace renderer
                     if (!material->unlit) {
                         auto N = glm::normalize(inNormal);
                         const auto L = glm::normalize(lightDir);
-                        uint8_t specular = 0;
+                        float specular = 0.f;
+                        float shininess = 16.f;
 
                         if (primitive->hasTangent() && material->normalTexture) {
                             const auto T0 = glm::normalize(inTangent);
@@ -194,13 +200,20 @@ namespace renderer
                             const auto normalMap = image->get(UV.x * image->width, UV.y * image->height);
                             N = glm::normalize(TBN * normalMap.toNormal());
 
-                            specular = std::fmin(255.f, std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), 16.0f) * 255.f);
+                            const auto specAngle = std::max(glm::dot(halfDir, N), 0.f);
+
+                            // Blinn-Phong
+                            specular = std::fmin(std::pow(std::fmax(glm::dot(halfDir, N), 0.f), shininess), ctx.maxShadingFactor);
+
+                            // Phong
+                            //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
                         }
 
-                        const auto DF = std::fmin(1.f, std::fmax(glm::dot(N, L), 0.7f));
+                        const auto diffuseFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
+                        auto specularColor = ctx.lightColor * specular * material->specularFactor;
 
-                        if (DF > 0) {
-                            Color newColor(diffuse * DF + specular, diffuse.A());
+                        if (diffuseFactor > 0) {
+                            Color newColor(diffuse * diffuseFactor + specularColor, diffuse.A());
                             color.copy(newColor);
                         }
                     }
