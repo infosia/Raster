@@ -100,11 +100,6 @@ namespace renderer
         return glm::perspectiveFov(glm::radians(fov), (float)width, (float)height, near, far);
     }
 
-    inline glm::quat lookAt(const glm::vec3 &from, const glm::vec3 &to, const glm::vec3 &up = glm::vec3(0, 1, 0))
-    {
-        return glm::quatLookAt(glm::normalize(to - from), up);
-    }
-
     inline glm::uvec4 bb(const glm::vec3 tri[3], const int width, const int height)
     {
         int left = std::min(tri[0].x, std::min(tri[1].x, tri[2].x));
@@ -205,13 +200,13 @@ namespace renderer
         const uint32_t height = options.height;
 
         Camera &camera = options.camera;
-        Model &model = options.model;
 
         ctx.projection = getProjectionMatrix(width, height, camera.fov, camera.znear, camera.zfar);
         ctx.view = getViewMatrix(camera);
-        ctx.model = getModelMatrix(model);
+        ctx.model = getModelMatrix(options.model);
         ctx.bgColor = options.background;
-        ctx.cameraPos = camera.translation;
+        ctx.camera = camera;
+        ctx.light = options.light;
 
         ctx.zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
         ctx.framebuffer->reset(width, height, options.format);

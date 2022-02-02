@@ -174,6 +174,16 @@ namespace renderer
         material->unlit = cmat->unlit;
     }
 
+    inline glm::vec3 min(const glm::vec3 &v1, const glm::vec3 &v2)
+    {
+        return glm::vec3{ std::min<float>(v1.x, v2.x), std::min<float>(v1.y, v2.y), std::min<float>(v1.z, v2.z) };
+    }
+
+    inline glm::vec3 max(const glm::vec3 &v1, const glm::vec3 &v2)
+    {
+        return glm::vec3{ std::max<float>(v1.x, v2.x), std::max<float>(v1.y, v2.y), std::max<float>(v1.z, v2.z) };
+    }
+
     static void LoadPrimitive(cgltf_data *cdata, cgltf_primitive *cprim, Scene *scene, Primitive *primitive)
     {
         // Assuming materials are already loaded
@@ -222,10 +232,16 @@ namespace renderer
             vertices_data = (cgltf_float *)malloc(unpack_count * sizeof(cgltf_float));
             cgltf_accessor_unpack_floats(acc_POS, vertices_data, unpack_count);
 
+            primitive->bbmin = glm::vec3(std::numeric_limits<float>::max());
+            primitive->bbmax = glm::vec3(std::numeric_limits<float>::min());
+
             primitive->vertices.resize(acc_POS->count);
             for (cgltf_size i = 0; i < acc_POS->count; ++i) {
                 primitive->vertices[i] = glm::make_vec3(vertices_data + (i * 3));
+                primitive->bbmin = renderer::min(primitive->bbmin, primitive->vertices[i]);
+                primitive->bbmax = renderer::max(primitive->bbmax, primitive->vertices[i]);
             }
+            primitive->center = (primitive->bbmin + primitive->bbmax) / 2.f;
         }
 
         cgltf_float *normals_data = nullptr;
@@ -408,10 +424,16 @@ namespace renderer
                 std::cout << "[INFO] Loading Mesh at " << (cmesh - cdata->meshes) << std::endl;
         }
 
+        mesh->bbmin = glm::vec3(std::numeric_limits<float>::max());
+        mesh->bbmax = glm::vec3(std::numeric_limits<float>::min());
         mesh->primitives.resize(cmesh->primitives_count);
         for (cgltf_size i = 0; i < cmesh->primitives_count; ++i) {
-            LoadPrimitive(cdata, &cmesh->primitives[i], scene, &mesh->primitives.at(i));
+            const auto primitive = &mesh->primitives.at(i);
+            LoadPrimitive(cdata, &cmesh->primitives[i], scene, primitive);
+            mesh->bbmin = renderer::min(mesh->bbmin, primitive->bbmin);
+            mesh->bbmax = renderer::max(mesh->bbmax, primitive->bbmax);
         }
+        mesh->center = (mesh->bbmax + mesh->bbmin) / 2.f;
     }
 
     static void LoadNode(cgltf_data *cdata, cgltf_node *cnode, Scene *scene, Node *node)
@@ -537,10 +559,16 @@ namespace renderer
             LoadMaterial(data, &data->materials[i], &scene, &scene.materials.at(i));
         }
 
+        scene.bbmin = glm::vec3(std::numeric_limits<float>::max());
+        scene.bbmax = glm::vec3(std::numeric_limits<float>::min());
         scene.meshes.resize(data->meshes_count);
         for (cgltf_size i = 0; i < data->meshes_count; ++i) {
-            LoadMesh(data, &data->meshes[i], &scene, &scene.meshes.at(i));
+            const auto mesh = &scene.meshes.at(i);
+            LoadMesh(data, &data->meshes[i], &scene, mesh);
+            scene.bbmin = renderer::min(scene.bbmin, mesh->bbmin);
+            scene.bbmax = renderer::max(scene.bbmax, mesh->bbmax);
         }
+        scene.center = (scene.bbmin + scene.bbmax) / 2.f;
 
         scene.skins.resize(data->skins_count);
         scene.allNodes.resize(data->nodes_count);

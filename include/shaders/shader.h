@@ -39,8 +39,9 @@ namespace renderer
         glm::mat4 view{ glm::mat4(1.f) };
         glm::mat4 viewport{ glm::mat4(1.f) };
         glm::mat4 projection{ glm::mat4(1.f) };
-        glm::vec3 lightPos{ glm::vec3(0.0f, 1.5f, 1.f) };
-        glm::vec3 cameraPos{ glm::vec3() };
+
+        Camera camera{};
+        Light light{};
 
         Image *framebuffer{ nullptr };
         std::vector<float> zbuffer;
@@ -48,10 +49,9 @@ namespace renderer
         const glm::mat4 *jointMatrices{ nullptr };
 
         Color bgColor{ 255, 255, 255, 255 };
-        Color lightColor{ 255, 255, 255, 255 };
 
         // Max limit of shading color changes
-        float maxShadingFactor = 0.7f;
+        float maxShadingFactor = 0.8f;
     };
 
     struct Shader
@@ -166,8 +166,8 @@ namespace renderer
             const auto inNormal = vNormal * bar;
             const auto inTangent = vTangent * glm::vec4(bar, 1.f);
             const auto inPosition = vPosition * bar;
-            const auto lightDir = glm::normalize(ctx.lightPos - inPosition);
-            const auto viewDir = glm::normalize(ctx.cameraPos - inPosition);
+            const auto lightDir = glm::normalize(ctx.light.position - inPosition);
+            const auto viewDir = glm::normalize(ctx.camera.translation - inPosition);
             const auto halfDir = glm::normalize(lightDir - viewDir);
 
             if (primitive->material) {
@@ -201,8 +201,6 @@ namespace renderer
                             const auto normalMap = image->get(UV.x * image->width, UV.y * image->height);
                             N = glm::normalize(TBN * normalMap.toNormal());
 
-                            const auto specAngle = std::max(glm::dot(halfDir, N), 0.f);
-
                             // Blinn-Phong
                             specular = std::fmin(std::pow(std::fmax(glm::dot(halfDir, N), 0.f), shininess), ctx.maxShadingFactor);
 
@@ -211,7 +209,7 @@ namespace renderer
                         }
 
                         const auto diffuseFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
-                        auto specularColor = ctx.lightColor * specular * material->specularFactor;
+                        auto specularColor = ctx.light.color * specular * material->specularFactor;
 
                         if (diffuseFactor > 0) {
                             Color newColor(diffuse * diffuseFactor + specularColor, diffuse.A());

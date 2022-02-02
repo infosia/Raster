@@ -25,6 +25,7 @@ set (BUILD_INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/cgltf
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/stb
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/glm
+  ${CMAKE_CURRENT_SOURCE_DIR}/extern/ghc
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/nlohmann
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/mikktspace
 )

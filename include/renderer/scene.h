@@ -42,7 +42,7 @@ namespace renderer
             : width(width)
             , height(height)
             , format(format)
-            , data(std::vector<std::uint8_t>(width * height * (uint8_t)format, 0))
+            , data(std::vector<std::uint8_t>(width * height * (uint32_t)format, 0))
         {
         }
         Image &operator=(const Image &) = delete;
@@ -305,6 +305,10 @@ namespace renderer
         std::vector<glm::vec4> weights;
 
         std::vector<uint32_t> indices;
+
+        glm::vec3 center;
+        glm::vec3 bbmin;
+        glm::vec3 bbmax;
     };
 
     class Mesh
@@ -315,6 +319,10 @@ namespace renderer
 
         std::string name;
         std::vector<Primitive> primitives;
+
+        glm::vec3 center;
+        glm::vec3 bbmin;
+        glm::vec3 bbmax;
     };
 
     class Node;
@@ -354,13 +362,24 @@ namespace renderer
 
     struct Camera
     {
+        glm::quat lookAt(const glm::vec3 &from, const glm::vec3 &to, const glm::vec3 &up = glm::vec3(0, 1, 0))
+        {
+            return glm::quatLookAt(glm::normalize(to - from), up);
+        }
+
         float fov{ 30.f };
         float znear{ 0.1f };
         float zfar{ 100.f };
 
         glm::vec3 translation{ 0.f, 1.f, -2.f };
-        glm::quat rotation{ glm::quatLookAt(glm::vec3(0, 0, 0) - glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)) };
+        glm::quat rotation{ lookAt(glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, 0.f, 0.f)) };
         glm::vec3 scale{ 1.f, 1.f, 1.f };
+    };
+
+    struct Light
+    {
+        Color color{ 255, 255, 255, 255 };
+        glm::vec3 position{ glm::vec3(0.0f, 1.5f, 1.f) };
     };
 
     struct RenderOptions
@@ -376,8 +395,9 @@ namespace renderer
 
         Color background{ 255, 255, 255, 255 };
 
-        Camera camera;
-        Model model;
+        Camera camera{};
+        Light light{};
+        Model model{};
     };
 
     class Scene
@@ -386,6 +406,10 @@ namespace renderer
         Scene() = default;
         Scene(const Scene &) = delete;
         Scene &operator=(const Scene &) = delete;
+
+        glm::vec3 center;
+        glm::vec3 bbmin;
+        glm::vec3 bbmax;
 
         std::vector<Node *> children;
 

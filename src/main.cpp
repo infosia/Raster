@@ -25,6 +25,10 @@
 #include <CLI11.hpp>
 #include <json.hpp>
 
+#include <ghc/filesystem.hpp>
+
+namespace fs = ghc::filesystem;
+
 #include "json_func.inl"
 
 using namespace renderer;
@@ -52,13 +56,37 @@ int main(int argc, char **argv)
 
     Scene scene;
 
-    scene.options.input = input;
-    scene.options.verbose = verbose;
-    scene.options.silent = silent;
+    RenderOptions &options = scene.options;
 
+    options.input = input;
+    options.verbose = verbose;
+    options.silent = silent;
+
+    //
+    // default settings (overridden by config JSON if specified)
+    //
+
+    // Output image size
+    options.width = 1024;
+    options.height = 1024;
+
+    // Model rotation
+    const fs::path inputPath = input;
+    if (inputPath.extension() == ".vrm") {
+        options.model.rotation = glm::quat(-0.259, 0, 0.966, 0);
+    } else {
+        options.model.rotation = glm::quat(0.966, 0, 0.259, 0);
+    }
+
+    // Light color (used by reflection)
+    options.light.color = Color(206, 74, 0, 255);
+
+    //
+    // Config JSON
+    //
     if (!config.empty()) {
         nlohmann::json configJson;
-        if (json_parse(config, &configJson, scene.options.silent)) {
+        if (json_parse(config, &configJson, options.silent)) {
 
         } else {
             return 1;
@@ -68,6 +96,12 @@ int main(int argc, char **argv)
     if (!loadGLTF(input, scene)) {
         return 1;
     }
+
+    //
+    // Move camera position to center of the scene (x & y axis), and far enough (body height * 2.5) from the bounding box (z-axis)
+    // This differs among models and needs to be adjusted depending on the model forms.
+    //
+    options.camera.translation = glm::vec3(scene.center.x, scene.center.y, -(scene.bbmax.y * 2.5f));
 
     Image outputImage;
     if (!render(scene, outputImage)) {
