@@ -219,7 +219,7 @@ namespace renderer
         Texture *normalTexture{ nullptr };
         AlphaMode alphaMode{ AlphaMode::Opaque };
         float alphaCutOff{ 0.f };
-        float specularFactor { 1.f };
+        float specularFactor{ 1.f };
         bool doubleSided{ false };
         bool unlit{ false };
     };
@@ -345,10 +345,22 @@ namespace renderer
         bool visible{ true };
     };
 
+    struct Model
+    {
+        glm::vec3 translation{ 0.f, 0.f, 0.f };
+        glm::quat rotation{ 1.f, 0.f, 0.f, 0.f }; // w, x, y.z
+        glm::vec3 scale{ 1.f, 1.f, 1.f };
+    };
+
     struct Camera
     {
-        float fov;
-        float znear, zfar;
+        float fov{ 30.f };
+        float znear{ 0.1f };
+        float zfar{ 100.f };
+
+        glm::vec3 translation{ 0.f, 1.f, -2.f };
+        glm::quat rotation{ glm::quatLookAt(glm::vec3(0, 0, 0) - glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)) };
+        glm::vec3 scale{ 1.f, 1.f, 1.f };
     };
 
     struct RenderOptions
@@ -360,6 +372,12 @@ namespace renderer
 
         uint32_t width{ 1024 };
         uint32_t height{ 1024 };
+        Image::Format format{ Image::Format::RGB };
+
+        Color background{ 255, 255, 255, 255 };
+
+        Camera camera;
+        Model model;
     };
 
     class Scene

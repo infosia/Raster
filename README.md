@@ -1,6 +1,6 @@
 # :diamond_shape_with_a_dot_inside: Raster
 
-A software renderer which does not require any GPU resources and works without Vulkan nor OpenGL. Written in C++11. Currently only supports [glTF](https://www.khronos.org/gltf/) binary (`.glb`) and [VRM](https://vrm.dev/en/) (`.vrm`) models as input, and PNG image format for output.
+A software renderer which does not require any GPU resources. Works without Vulkan nor OpenGL, written in C++11. Currently only supports [glTF](https://www.khronos.org/gltf/) binary (`.glb`) and [VRM](https://vrm.dev/en/) (`.vrm`) models as input, and PNG image format for output.
 
 **[[[Work In Progress]]]**
 

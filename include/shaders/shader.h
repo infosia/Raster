@@ -40,15 +40,15 @@ namespace renderer
         glm::mat4 viewport{ glm::mat4(1.f) };
         glm::mat4 projection{ glm::mat4(1.f) };
         glm::vec3 lightPos{ glm::vec3(0.0f, 1.5f, 1.f) };
-        glm::vec3 cameraPos { glm::vec3() };
+        glm::vec3 cameraPos{ glm::vec3() };
 
         Image *framebuffer{ nullptr };
         std::vector<float> zbuffer;
 
         const glm::mat4 *jointMatrices{ nullptr };
 
-        Color bgColor { 255, 255, 255, 255 };
-        Color lightColor { 255, 255, 255, 255 };
+        Color bgColor{ 255, 255, 255, 255 };
+        Color lightColor{ 255, 255, 255, 255 };
 
         // Max limit of shading color changes
         float maxShadingFactor = 0.7f;

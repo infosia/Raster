@@ -31,12 +31,6 @@
 
 namespace renderer
 {
-    struct TRS
-    {
-        glm::vec3 translation{ 0.f, 0.f, 0.f };
-        glm::quat rotation{ 1.f, 0.f, 0.f, 0.f };
-        glm::vec3 scale{ 1.f, 1.f, 1.f };
-    };
 
     static void generateSSAA(Image *dst, const Image *src, uint8_t kernelSize = 2)
     {
@@ -91,14 +85,14 @@ namespace renderer
             || inBounds(tri[2].x, tri[2].y, width, height);
     }
 
-    inline glm::mat4 getModelMatrix(const TRS &transform)
+    inline glm::mat4 getModelMatrix(const Model &model)
     {
-        return glm::translate(transform.translation) * glm::toMat4(transform.rotation) * glm::scale(transform.scale) * glm::mat4(1.f);
+        return glm::translate(model.translation) * glm::toMat4(model.rotation) * glm::scale(model.scale) * glm::mat4(1.f);
     }
 
-    inline glm::mat4 getViewMatrix(const TRS &transform)
+    inline glm::mat4 getViewMatrix(const Camera &camera)
     {
-        return glm::translate(-transform.translation) * glm::toMat4(transform.rotation) * glm::scale(transform.scale);
+        return glm::translate(-camera.translation) * glm::toMat4(camera.rotation) * glm::scale(camera.scale);
     }
 
     inline glm::mat4 getProjectionMatrix(uint32_t width, uint32_t height, float fov, float near, float far)
@@ -205,28 +199,22 @@ namespace renderer
 
         ctx.framebuffer = &framebuffer;
 
-        const uint32_t width = scene.options.width;
-        const uint32_t height = scene.options.height;
+        RenderOptions &options = scene.options;
 
-        TRS camera;
-        camera.translation = glm::vec3(0.f, 0.8f, -3.5f);
-        camera.rotation = lookAt(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0));
-        camera.scale = glm::vec3(1.f, 1.f, 1.f);
+        const uint32_t width = options.width;
+        const uint32_t height = options.height;
 
-        TRS model;
-        model.translation = glm::vec3(0.f, 0.f, 0.f);
-        //model.rotation = glm::quat(-0.259, 0, 0.966, 0); /// VRM
-        model.rotation = glm::quat(0.966, 0, 0.259, 0);
-        model.scale = glm::vec3(1.f, 1.f, 1.f);
+        Camera &camera = options.camera;
+        Model &model = options.model;
 
-        ctx.projection = getProjectionMatrix(width, height, 30.f, 0.1f, 100.0f);
+        ctx.projection = getProjectionMatrix(width, height, camera.fov, camera.znear, camera.zfar);
         ctx.view = getViewMatrix(camera);
         ctx.model = getModelMatrix(model);
-        ctx.bgColor = Color(255, 255, 255, 255);
+        ctx.bgColor = options.background;
         ctx.cameraPos = camera.translation;
 
         ctx.zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
-        ctx.framebuffer->reset(width, height, Image::Format::RGB);
+        ctx.framebuffer->reset(width, height, options.format);
         ctx.framebuffer->fill(ctx.bgColor);
 
         DefaultShader standard;
@@ -236,7 +224,7 @@ namespace renderer
 
         for (auto node : scene.children) {
             for (auto shader : shaders) {
-                draw(scene.options, shader, ctx, node);
+                draw(options, shader, ctx, node);
             }
         }
 
