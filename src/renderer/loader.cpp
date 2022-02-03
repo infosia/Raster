@@ -151,6 +151,9 @@ namespace renderer
 
         texture->image = image;
 
+        if (ctexture->image == nullptr || ctexture->image->buffer_view == nullptr)
+            return false;
+
         if (ctexture->image->name)
             texture->name = ctexture->image->name;
         else if (ctexture->name)
@@ -247,6 +250,7 @@ namespace renderer
         const cgltf_accessor *acc_TGT = nullptr;
         const cgltf_accessor *acc_JOINTS = nullptr;
         const cgltf_accessor *acc_WEIGHTS = nullptr;
+        const cgltf_accessor *acc_COLOR = nullptr;
 
         for (cgltf_size i = 0; i < cprim->attributes_count; ++i) {
             const auto attr = &cprim->attributes[i];
@@ -262,6 +266,8 @@ namespace renderer
                 acc_JOINTS = attr->data;
             } else if (attr->type == cgltf_attribute_type_weights) {
                 acc_WEIGHTS = attr->data;
+            } else if (attr->type == cgltf_attribute_type_color) {
+                acc_COLOR = attr->data;
             }
         }
 
@@ -349,7 +355,7 @@ namespace renderer
             assert(acc_POS->count == acc_TGT->count);
             const auto num_components = cgltf_num_components(acc_TGT->type);
             const auto unpack_count = acc_TGT->count * num_components;
-            assert(num_components == 3);
+            assert(num_components == 4);
             auto *tgt = (cgltf_float *)malloc(unpack_count * sizeof(cgltf_float));
             cgltf_accessor_unpack_floats(acc_TGT, tgt, unpack_count);
 
@@ -378,6 +384,22 @@ namespace renderer
             }
 
             free(tgt);
+        }
+
+        if (acc_COLOR) {
+            assert(acc_POS->count == acc_COLOR->count);
+            const auto num_components = cgltf_num_components(acc_COLOR->type);
+            const auto unpack_count = acc_COLOR->count * num_components;
+            assert(num_components == 4);
+            auto *colors = (cgltf_float *)malloc(unpack_count * sizeof(cgltf_float));
+            cgltf_accessor_unpack_floats(acc_COLOR, colors, unpack_count);
+
+            primitive->colors.resize(acc_COLOR->count);
+            for (cgltf_size i = 0; i < acc_COLOR->count; ++i) {
+                primitive->colors[i] = glm::make_vec4(colors + (i * 4));
+            }
+
+            free(colors);
         }
 
         if (vertices_data)

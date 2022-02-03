@@ -45,9 +45,6 @@ namespace renderer
         Image *framebuffer{ nullptr };
         std::vector<float> zbuffer;
 
-        const glm::mat4 *jointMatrices{ nullptr };
-        glm::mat4 bindMatrix;
-
         Color bgColor{ 255, 255, 255, 255 };
 
         // Max limit of shading color changes
@@ -57,19 +54,21 @@ namespace renderer
     struct Shader
     {
         const Primitive *primitive{ nullptr };
+        const glm::mat4 *jointMatrices{ nullptr };
+        glm::mat4 bindMatrix;
+
         virtual glm::vec4 vertex(const ShaderContext &ctx, const uint32_t iface, const uint32_t ivert) = 0;
         virtual bool fragment(const ShaderContext &ctx, const glm::vec3 bar, bool backfacing, Color &color) = 0;
 
         glm::mat4 skinning(const ShaderContext &ctx, const uint32_t iface, const uint32_t ivert)
         {
             glm::mat4 skinMat = glm::identity<glm::mat4>();
-            if (primitive->hasJoints() && ctx.jointMatrices) {
+            if (primitive->hasJoints() && jointMatrices) {
                 const auto inJointIndices = primitive->joint(iface, ivert);
                 const auto inJointWeights = primitive->weight(iface, ivert);
-                const auto jointMatrices = ctx.jointMatrices;
                 skinMat = inJointWeights.x * jointMatrices[int(inJointIndices.x)] + inJointWeights.y * jointMatrices[int(inJointIndices.y)] + inJointWeights.z * jointMatrices[int(inJointIndices.z)] + inJointWeights.w * jointMatrices[int(inJointIndices.w)];
             } else {
-                skinMat = ctx.bindMatrix;
+                skinMat = bindMatrix;
             }
             return skinMat;
         }
@@ -124,6 +123,7 @@ namespace renderer
 
     struct DefaultShader : Shader
     {
+        glm::mat4x3 vColor;
         glm::mat3x3 vPosition;
         glm::mat3x3 vNormal;
         glm::mat4x3 vTangent;
@@ -132,6 +132,7 @@ namespace renderer
         DefaultShader()
             : vNormal()
             , vTangent()
+            , vColor()
             , vUV()
         {
         }
@@ -153,6 +154,9 @@ namespace renderer
             if (primitive->hasTangent())
                 vTangent[ivert] = primitive->tangent(iface, ivert) * skinMat3;
 
+            if (primitive->hasColor())
+                vColor[ivert] = primitive->color(iface, ivert);
+
             if (primitive->hasUV())
                 vUV[ivert] = primitive->uv(iface, ivert);
 
@@ -171,6 +175,7 @@ namespace renderer
             const auto lightDir = glm::normalize(ctx.light.position - inPosition);
             const auto viewDir = glm::normalize(ctx.camera.translation - inPosition);
             const auto halfDir = glm::normalize(lightDir - viewDir);
+            const auto inColor = vColor * glm::vec4(bar, 1.f);
 
             if (primitive->material) {
                 const auto material = primitive->material;
@@ -227,6 +232,10 @@ namespace renderer
                 // alpha-cutoff
                 if (material->alphaMode == AlphaMode::Mask && color.Af() < material->alphaCutOff)
                     return true;
+            }
+
+            if (primitive->hasColor()) {
+                color.copy(color * glm::vec4(inColor, 1.f));
             }
 
             return false;

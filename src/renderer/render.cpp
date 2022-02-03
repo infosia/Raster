@@ -148,9 +148,9 @@ namespace renderer
     static void draw(const RenderOptions &options, Shader *shader, ShaderContext &ctx, const Node *node)
     {
         if (node->skin)
-            ctx.jointMatrices = node->skin->jointMatrices.data();
+            shader->jointMatrices = node->skin->jointMatrices.data();
         else
-            ctx.bindMatrix = node->bindMatrix;
+            shader->bindMatrix = node->bindMatrix;
 
         if (node->mesh) {
             if (options.verbose && !node->name.empty())
@@ -222,7 +222,7 @@ namespace renderer
 
         if (scene.options.verbose) {
             const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
-            std::cout << "Rendering done in " << msec << " msec" << std::endl;
+            std::cout << "[INFO] Rendering done in " << msec << " msec" << std::endl;
         }
 
         return true;

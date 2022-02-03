@@ -1,6 +1,6 @@
 # :diamond_shape_with_a_dot_inside: Raster
 
-A software renderer which does not require any GPU resources. Works without Vulkan, OpenGL nor Metal, written in C++11. Currently only supports [glTF](https://www.khronos.org/gltf/) binary (`.glb`) and [VRM](https://vrm.dev/en/) (`.vrm`) models as input, and PNG image format for output.
+A software renderer which does not require any GPU resources. Works without Vulkan, OpenGL nor Metal. Written in C++11, currently only supports [glTF](https://www.khronos.org/gltf/) binary (`.glb`) and [VRM](https://vrm.dev/en/) (`.vrm`) models as input, and PNG image format for output.
 
 **[[[Work In Progress]]]**
 
@@ -16,7 +16,7 @@ A software renderer which does not require any GPU resources. Works without Vulk
 - [x] Orbital camera control
 - [x] Inverted hull outline
 - [x] Blinn-Phong reflection
-- [ ] Vertex colors
+- [x] Vertex colors
 - [ ] Morph targets
 - [ ] MToon shading
 - [ ] SSAA (anti-alias)
@@ -36,7 +36,7 @@ A software renderer which does not require any GPU resources. Works without Vulk
 
 ## Usage (As a library)
 
-Raster is built to be integrated with applications of your choice as an external library. Raster has easy to use API that enables you to view 3D models as an image, without any GPU dependencies such as Vulkan and OpenGL.
+Raster is built to be integrated with applications of your choice as an external library. Raster has easy to use API that enables you to view glTF models as an image, without any GPU dependencies such as Vulkan and OpenGL.
 
 ```c++
 #include "raster.h"
@@ -69,6 +69,26 @@ int main(int argc, char **argv)
 
     return 0;
 }
+```
+
+## Image memory layout
+
+The Image object you can construct from `render()` consists of an array of the pixel data, which is unsigned 8bit integer (`uint8_t`) for each colors (RGBA). Note that these color value ranges `(0 to 255)` unsigned integer value. You can use `Color Image::get(uint32_t x, uint32_t y)` in order to get color of given x-y position, like following:
+
+```c++
+// Render
+Image outputImage;
+if (!render(scene, outputImage)) {
+    return 1; // This means rendering failed
+}
+
+// Get color at position (x=100, y=200)
+Color color = outputImage.get(100, 200);
+
+uint8_t red = color.R();
+uint8_t green = color.G();
+uint8_t blue = color.B();
+uint8_t alpha = color.A();
 ```
 
 ## License

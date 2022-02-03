@@ -179,6 +179,14 @@ namespace renderer
             return res;
         }
 
+        Color operator*(const glm::vec4 colors /* 0.f - 1.f */) const
+        {
+            Color res = *this;
+            for (int i = 0; i < 4; i++)
+                res.rgba[i] = rgba[i] * colors[i];
+            return res;
+        }
+
         Color operator+(const glm::vec4 colors /* 0.f - 1.f */) const
         {
             Color res = *this;
@@ -271,6 +279,11 @@ namespace renderer
             return tangents[indices[iface * 3 + ivert]];
         }
 
+        glm::vec4 color(const int iface, const int ivert) const
+        {
+            return colors[indices[iface * 3 + ivert]];
+        }
+
         glm::vec4 joint(const int iface, const int ivert) const
         {
             return joints[indices[iface * 3 + ivert]];
@@ -296,6 +309,11 @@ namespace renderer
             return uvs.size() > 0;
         }
 
+        bool hasColor() const
+        {
+            return colors.size() > 0;
+        }
+
         bool hasTangent() const
         {
             return tangents.size() > 0;
@@ -312,6 +330,7 @@ namespace renderer
         std::vector<glm::vec2> uvs;
         std::vector<glm::vec4> joints;
         std::vector<glm::vec4> weights;
+        std::vector<glm::vec4> colors;
 
         std::vector<uint32_t> indices;
 
