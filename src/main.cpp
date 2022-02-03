@@ -102,6 +102,8 @@ int main(int argc, char **argv)
     // This differs among models and needs to be adjusted depending on the model forms.
     //
     options.camera.translation = glm::vec3(scene.center.x, scene.center.y, -(scene.bbmax.y * 2.5f));
+    //options.camera.translation = glm::vec3(0.f, 1.f, -4.5f);
+    //options.camera.rotation = glm::quatLookAt(glm::normalize(glm::vec3(0.f, .5f, 1.f) - glm::vec3(0.f, 0.f, 0.f)), glm::vec3(0.f, 1.f, 0.f));
 
     Image outputImage;
     if (!render(scene, outputImage)) {

@@ -357,13 +357,13 @@ namespace renderer
         Mesh *mesh{ nullptr };
         Skin *skin{ nullptr };
         std::vector<Node *> children;
-        glm::mat4 matrix{ glm::identity<glm::mat4>() };
+        glm::mat4 matrix{ };
         std::string name;
         bool visible{ true };
 
         // Used when skinning is disabled. This multiplies all matrices from parent.
         // Updated by UpdateJoints() in loader.cpp
-        glm::mat4 bindMatrix{ glm::identity<glm::mat4>() };
+        glm::mat4 bindMatrix{ };
     };
 
     struct Model
@@ -375,24 +375,19 @@ namespace renderer
 
     struct Camera
     {
-        glm::quat lookAt(const glm::vec3 &from, const glm::vec3 &to, const glm::vec3 &up = glm::vec3(0, 1, 0))
-        {
-            return glm::quatLookAt(glm::normalize(from - to), up);
-        }
-
         float fov{ 30.f };
         float znear{ 0.1f };
         float zfar{ 100.f };
 
         glm::vec3 translation{ 0.f, 1.f, -2.f };
-        glm::quat rotation{ lookAt(glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, 0.f, 0.f)) };
+        glm::quat rotation{ 0.f, 0.f, 1.f, 0.f };
         glm::vec3 scale{ 1.f, 1.f, 1.f };
     };
 
     struct Light
     {
         Color color{ 255, 255, 255, 255 };
-        glm::vec3 position{ glm::vec3(0.0f, 1.5f, 1.f) };
+        glm::vec3 position{ 0.0f, 1.5f, 1.f };
     };
 
     struct RenderOptions

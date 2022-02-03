@@ -34,10 +34,10 @@ namespace renderer
         ShaderContext(const ShaderContext &) = delete;
         ShaderContext &operator=(const ShaderContext &) = delete;
 
-        glm::mat4 model{ glm::mat4(1.f) };
-        glm::mat4 view{ glm::mat4(1.f) };
-        glm::mat4 viewport{ glm::mat4(1.f) };
-        glm::mat4 projection{ glm::mat4(1.f) };
+        glm::mat4 model{};
+        glm::mat4 view{ };
+        glm::mat4 viewport{  };
+        glm::mat4 projection{ };
 
         Camera camera{};
         Light light{};
@@ -85,7 +85,7 @@ namespace renderer
         glm::mat3x3 vNormal;
 
         OutlineShader()
-            : vNormal(glm::mat3x3())
+            : vNormal()
         {
         }
 
@@ -130,9 +130,9 @@ namespace renderer
         glm::mat3x2 vUV;
 
         DefaultShader()
-            : vNormal(glm::mat3x3())
-            , vTangent(glm::mat3x3())
-            , vUV(glm::mat3x2())
+            : vNormal()
+            , vTangent()
+            , vUV()
         {
         }
 
