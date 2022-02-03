@@ -22,8 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-#include <glm/gtc/matrix_access.hpp>
+#include "pch.h"
 
 namespace renderer
 {
@@ -177,44 +176,48 @@ namespace renderer
                 if (!material->doubleSided && backfacing)
                     return true;
 
+                // base color (gamma corrected)
+                color.copy(color + material->baseColorFactor_sRGB);
+
                 if (material->baseColorTexture) {
                     const auto texture = material->baseColorTexture->image;
                     auto diffuse = texture->get(UV.x * texture->width, UV.y * texture->height);
-                    color.copy(diffuse);
 
                     if (material->alphaMode != AlphaMode::Opaque && texture->format == Image::Format::RGBA && diffuse.A() == 0)
                         return true;
 
-                    if (!material->unlit) {
-                        auto N = glm::normalize(inNormal);
-                        const auto L = glm::normalize(lightDir);
-                        float specular = 0.f;
-                        float shininess = 16.f;
+                    color.copy(color + diffuse);
+                }
 
-                        if (primitive->hasTangent() && material->normalTexture) {
-                            const auto T0 = glm::normalize(inTangent);
-                            const auto T1 = T0 - glm::dot(T0, N) * N;
-                            const auto B = glm::cross(N, T1);
-                            const auto TBN = glm::mat3(T1, B, N);
+                if (!material->unlit) {
+                    auto N = glm::normalize(inNormal);
+                    const auto L = glm::normalize(lightDir);
+                    float specular = 0.f;
+                    float shininess = 16.f;
 
-                            const auto image = material->normalTexture->image;
-                            const auto normalMap = image->get(UV.x * image->width, UV.y * image->height);
-                            N = glm::normalize(TBN * normalMap.toNormal());
+                    if (primitive->hasTangent() && material->normalTexture) {
+                        const auto T0 = glm::normalize(inTangent);
+                        const auto T1 = T0 - glm::dot(T0, N) * N;
+                        const auto B = glm::cross(N, T1);
+                        const auto TBN = glm::mat3(T1, B, N);
 
-                            // Blinn-Phong
-                            specular = std::fmin(std::pow(std::fmax(glm::dot(halfDir, N), 0.f), shininess), ctx.maxShadingFactor);
+                        const auto image = material->normalTexture->image;
+                        const auto normalMap = image->get(UV.x * image->width, UV.y * image->height);
+                        N = glm::normalize(TBN * normalMap.toNormal());
 
-                            // Phong
-                            //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
-                        }
+                        // Blinn-Phong
+                        specular = std::fmin(std::pow(std::fmax(glm::dot(halfDir, N), 0.f), shininess), ctx.maxShadingFactor);
 
-                        const auto diffuseFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
-                        auto specularColor = ctx.light.color * specular * material->specularFactor;
+                        // Phong
+                        //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
+                    }
 
-                        if (diffuseFactor > 0) {
-                            Color newColor(diffuse * diffuseFactor + specularColor, diffuse.A());
-                            color.copy(newColor);
-                        }
+                    const auto shadingFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
+                    auto specularColor = ctx.light.color * specular * material->specularFactor;
+
+                    if (shadingFactor > 0) {
+                        Color newColor(color * shadingFactor + specularColor, color.A());
+                        color.copy(newColor);
                     }
                 }
 

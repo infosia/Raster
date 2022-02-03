@@ -179,6 +179,14 @@ namespace renderer
             return res;
         }
 
+        Color operator+(const glm::vec4 colors /* 0.f - 1.f */) const
+        {
+            Color res = *this;
+            for (int i = 0; i < 4; i++)
+                res.rgba[i] = rgba[i] + (colors[i] * 255.f);
+            return res;
+        }
+
         Color operator+(Color &c) const
         {
             Color res = *this;
@@ -215,6 +223,7 @@ namespace renderer
     struct Material
     {
         glm::vec4 baseColorFactor{};
+        glm::vec4 baseColorFactor_sRGB{};
         Texture *baseColorTexture{ nullptr };
         Texture *normalTexture{ nullptr };
         AlphaMode alphaMode{ AlphaMode::Opaque };

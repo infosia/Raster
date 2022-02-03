@@ -149,6 +149,7 @@ namespace renderer
     {
         if (cmat->has_pbr_metallic_roughness) {
             material->baseColorFactor = glm::make_vec4(cmat->pbr_metallic_roughness.base_color_factor);
+            material->baseColorFactor_sRGB = glm::convertLinearToSRGB(material->baseColorFactor);
             const auto ctexture = cmat->pbr_metallic_roughness.base_color_texture.texture;
 
             // Assuming textures are already loaded

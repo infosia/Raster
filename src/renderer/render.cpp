@@ -123,15 +123,6 @@ namespace renderer
         return (a.x * b.y - a.y * b.x + b.x * c.y - b.y * c.x + c.x * a.y - c.y * a.x) > 0;
     }
 
-    static glm::mat4 *getJointMatrices(const Node *node)
-    {
-        if (node->skin)
-            return node->skin->jointMatrices.data();
-        if (node->parent)
-            return getJointMatrices(node->parent);
-        return nullptr;
-    }
-
     inline void drawBB(Shader *shader, ShaderContext &ctx, const glm::uvec4 &bbox, const glm::vec3 tri[3], glm::vec3 depths)
     {
         for (auto y = bbox.y; y != bbox.w + 1; ++y) {
@@ -155,7 +146,7 @@ namespace renderer
     static void draw(const RenderOptions &options, Shader *shader, ShaderContext &ctx, const Node *node)
     {
         if (node->skin)
-            ctx.jointMatrices = getJointMatrices(node);
+            ctx.jointMatrices = node->skin->jointMatrices.data();
 
         if (node->mesh) {
             if (options.verbose && !node->name.empty())

@@ -1,21 +1,23 @@
 # :diamond_shape_with_a_dot_inside: Raster
 
-A software renderer which does not require any GPU resources. Works without Vulkan nor OpenGL, written in C++11. Currently only supports [glTF](https://www.khronos.org/gltf/) binary (`.glb`) and [VRM](https://vrm.dev/en/) (`.vrm`) models as input, and PNG image format for output.
+A software renderer which does not require any GPU resources. Works without Vulkan, OpenGL nor Metal, written in C++11. Currently only supports [glTF](https://www.khronos.org/gltf/) binary (`.glb`) and [VRM](https://vrm.dev/en/) (`.vrm`) models as input, and PNG image format for output.
 
 **[[[Work In Progress]]]**
 
 ## Features
 
 - [x] glTF (.glb) as input
-- [x] VRM as input
+- [x] VRM (.vrm) as input
 - [x] PNG output
-- [x] Write shader in C++
+- [x] Shader in C++
 - [x] Backface culling
 - [x] Vertex skinning
 - [x] Tangent space normal mapping
 - [x] Orbital camera control
 - [x] Inverted hull outline
 - [x] Blinn-Phong reflection
+- [ ] Vertex colors
+- [ ] Morph targets
 - [ ] MToon shading
 - [ ] SSAA (anti-alias)
 
