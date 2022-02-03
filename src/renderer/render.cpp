@@ -29,6 +29,8 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
+#include <chrono>
+
 namespace renderer
 {
 
@@ -183,6 +185,8 @@ namespace renderer
 
     bool render(Scene &scene, Image &framebuffer)
     {
+        const auto start = std::chrono::system_clock::now();
+
         ShaderContext ctx;
 
         ctx.framebuffer = &framebuffer;
@@ -214,6 +218,11 @@ namespace renderer
             for (auto shader : shaders) {
                 draw(options, shader, ctx, node);
             }
+        }
+
+        if (scene.options.verbose) {
+            const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+            std::cout << "Rendering done in " << msec << " msec" << std::endl;
         }
 
         return true;

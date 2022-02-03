@@ -4,6 +4,8 @@ project(Raster)
 
 set(EXE_NAME Raster)
 
+find_package(OpenMP)
+
 set(HEADER_FILES
   include/json_func.inl
   include/renderer/render.h
@@ -39,6 +41,11 @@ set_property(TARGET ${EXE_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 target_include_directories(${EXE_NAME} PRIVATE ${BUILD_INCLUDES})
 target_precompile_headers(${EXE_NAME} PRIVATE include/pch.h)
 target_link_libraries(${EXE_NAME} PRIVATE mikktspace)
+
+if(OpenMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)

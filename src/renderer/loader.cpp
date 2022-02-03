@@ -25,6 +25,10 @@
 #include "pch.h"
 #include "renderer/scene.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #define CGLTF_IMPLEMENTATION
 #include <cgltf.h>
 #include <codecvt>
@@ -154,13 +158,6 @@ namespace renderer
 
         if (ctexture->image->mime_type)
             texture->mimeType = ctexture->image->mime_type;
-
-        if (scene->options.verbose) {
-            if (texture->name.empty())
-                std::cout << "[INFO] Loading Texture at " << (ctexture - data->textures) << std::endl;
-            else
-                std::cout << "[INFO] Loading Texture " << texture->name << std::endl;
-        }
 
         const auto buffer_view = ctexture->image->buffer_view;
         const auto src_buffer = (uint8_t *)buffer_view->buffer->data + buffer_view->offset;
@@ -437,9 +434,6 @@ namespace renderer
             skin->name = cskin->name;
         }
 
-        if (scene->options.verbose)
-            std::cout << "[INFO] Loading Skin at " << (cskin - cdata->skins) << std::endl;
-
         const auto num_matrices = cskin->inverse_bind_matrices->count;
         const auto num_components = cgltf_num_components(cskin->inverse_bind_matrices->type);
         const auto unpack_count = num_matrices * num_components;
@@ -468,11 +462,6 @@ namespace renderer
     {
         if (cmesh->name) {
             mesh->name = cmesh->name;
-            if (scene->options.verbose)
-                std::cout << "[INFO] Loading Mesh " << mesh->name << std::endl;
-        } else {
-            if (scene->options.verbose)
-                std::cout << "[INFO] Loading Mesh at " << (cmesh - cdata->meshes) << std::endl;
         }
 
         mesh->bbmin = glm::vec3(std::numeric_limits<float>::max());
@@ -491,11 +480,6 @@ namespace renderer
     {
         if (cnode->name) {
             node->name = cnode->name;
-            if (scene->options.verbose)
-                std::cout << "[INFO] Loading Node " << node->name << std::endl;
-        } else {
-            if (scene->options.verbose)
-                std::cout << "[INFO] Loading Node at " << (cnode - cdata->nodes) << std::endl;
         }
 
         // Assuming meshes are already loaded
@@ -599,9 +583,15 @@ namespace renderer
 
     static bool LoadScene(cgltf_data *data, Scene &scene)
     {
+        const auto start = std::chrono::system_clock::now();
+
+        if (scene.options.verbose)
+            std::cout << "[INFO] Loading scene...";
+
         scene.images.resize(data->textures_count);
         scene.textures.resize(data->textures_count);
-        for (cgltf_size i = 0; i < data->textures_count; ++i) {
+#pragma omp parallel for
+        for (int i = 0; i < (int)data->textures_count; ++i) {
             LoadTexture(data, &data->textures[i], &scene, &scene.textures.at(i), &scene.images.at(i));
         }
 
@@ -642,6 +632,11 @@ namespace renderer
         // Update joint matrix
         for (const auto node : scene.children) {
             UpdateJoints(node);
+        }
+
+        if (scene.options.verbose) {
+            const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+            std::cout << "done in " << msec << " msec" << std::endl;
         }
 
         return true;

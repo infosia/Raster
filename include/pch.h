@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_SILENT_WARNINGS
