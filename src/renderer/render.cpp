@@ -131,7 +131,7 @@ namespace renderer
                 if (bcoords.x >= 0.0f && bcoords.y >= 0.0f && bcoords.z >= 0.0f) {
                     const float frag_depth = glm::dot(bcoords, depths);
                     if (inBounds(x, y, ctx.framebuffer->width, ctx.framebuffer->height) && frag_depth > ctx.zbuffer.at(x + y * ctx.framebuffer->width)) {
-                        Color color(255, 255, 255, 255);
+                        Color color(0, 0, 0, 0);
                         const auto discarded = shader->fragment(ctx, bcoords, backfacing(tri), color);
                         if (discarded)
                             continue;
@@ -147,6 +147,8 @@ namespace renderer
     {
         if (node->skin)
             ctx.jointMatrices = node->skin->jointMatrices.data();
+        else
+            ctx.bindMatrix = node->bindMatrix;
 
         if (node->mesh) {
             if (options.verbose && !node->name.empty())

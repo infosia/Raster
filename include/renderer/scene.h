@@ -360,6 +360,10 @@ namespace renderer
         glm::mat4 matrix{ glm::identity<glm::mat4>() };
         std::string name;
         bool visible{ true };
+
+        // Used when skinning is disabled. This multiplies all matrices from parent.
+        // Updated by UpdateJoints() in loader.cpp
+        glm::mat4 bindMatrix{ glm::identity<glm::mat4>() };
     };
 
     struct Model
@@ -373,7 +377,7 @@ namespace renderer
     {
         glm::quat lookAt(const glm::vec3 &from, const glm::vec3 &to, const glm::vec3 &up = glm::vec3(0, 1, 0))
         {
-            return glm::quatLookAt(glm::normalize(to - from), up);
+            return glm::quatLookAt(glm::normalize(from - to), up);
         }
 
         float fov{ 30.f };
@@ -381,7 +385,7 @@ namespace renderer
         float zfar{ 100.f };
 
         glm::vec3 translation{ 0.f, 1.f, -2.f };
-        glm::quat rotation{ lookAt(glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, 0.f, 0.f)) };
+        glm::quat rotation{ lookAt(glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, 0.f, 0.f)) };
         glm::vec3 scale{ 1.f, 1.f, 1.f };
     };
 

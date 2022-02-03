@@ -46,6 +46,7 @@ namespace renderer
         std::vector<float> zbuffer;
 
         const glm::mat4 *jointMatrices{ nullptr };
+        glm::mat4 bindMatrix;
 
         Color bgColor{ 255, 255, 255, 255 };
 
@@ -67,6 +68,8 @@ namespace renderer
                 const auto inJointWeights = primitive->weight(iface, ivert);
                 const auto jointMatrices = ctx.jointMatrices;
                 skinMat = inJointWeights.x * jointMatrices[int(inJointIndices.x)] + inJointWeights.y * jointMatrices[int(inJointIndices.y)] + inJointWeights.z * jointMatrices[int(inJointIndices.z)] + inJointWeights.w * jointMatrices[int(inJointIndices.w)];
+            } else {
+                skinMat = ctx.bindMatrix;
             }
             return skinMat;
         }
@@ -176,8 +179,6 @@ namespace renderer
                 if (!material->doubleSided && backfacing)
                     return true;
 
-                // base color (gamma corrected)
-                color.copy(color + material->baseColorFactor_sRGB);
 
                 if (material->baseColorTexture) {
                     const auto texture = material->baseColorTexture->image;
@@ -187,6 +188,9 @@ namespace renderer
                         return true;
 
                     color.copy(color + diffuse);
+                } else {
+                    // base color (gamma corrected)
+                    color.copy(color + material->baseColorFactor_sRGB);
                 }
 
                 if (!material->unlit) {

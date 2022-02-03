@@ -365,10 +365,11 @@ namespace renderer
         return m;
     }
 
-    static void UpdateJoints(const Node *node)
+    static void UpdateJoints(Node *node)
     {
+        node->bindMatrix = getNodeMatrix(node);
         if (node->skin) {
-            const auto inverseTransform = glm::inverse(getNodeMatrix(node));
+            const auto inverseTransform = glm::inverse(node->bindMatrix);
             const auto skin = node->skin;
             const auto numJoints = skin->joints.size();
             for (size_t i = 0; i < numJoints; ++i) {
