@@ -29,6 +29,7 @@
 #include <cgltf.h>
 #include <codecvt>
 #include <mikktspace.h>
+#include <set>
 #include <stb_image.h>
 
 namespace renderer
@@ -95,6 +96,50 @@ namespace renderer
         nullptr,
         tm_mikk_setTSpace
     };
+
+    static bool checkNodeHierarchy(cgltf_node *node, std::set<cgltf_node *> parents)
+    {
+        // node should not point one of its parent
+        // it causes infinite loop
+        if (parents.count(node) > 0)
+            return false;
+
+        parents.emplace(node);
+        for (cgltf_size i = 0; i < node->children_count; ++i) {
+            const auto child = node->children[i];
+            // parent of the child is not right
+            if (child->parent != node)
+                return false;
+
+            if (!checkNodeHierarchy(child, parents))
+                return false;
+        }
+        return true;
+    }
+
+    static cgltf_result ValidateGLTF(cgltf_data *data, RenderOptions &options)
+    {
+        const auto result = cgltf_validate(data);
+        if (result != cgltf_result_success)
+            return result;
+
+        if (data->scene == nullptr) {
+            if (!options.silent)
+                std::cout << "[ERROR] No scene found in glTF. Nothing to render." << std::endl;
+            return cgltf_result_invalid_gltf;
+        }
+
+        for (cgltf_size i = 0; i < data->scene->nodes_count; ++i) {
+            std::set<cgltf_node *> parents;
+            if (!checkNodeHierarchy(data->scene->nodes[i], parents)) {
+                if (!options.silent)
+                    std::cout << "[ERROR] Invaid node hierarchy found in glTF." << std::endl;
+                return cgltf_result_invalid_gltf;
+            }
+        }
+
+        return cgltf_result_success;
+    }
 
     static bool LoadTexture(cgltf_data *data, cgltf_texture *ctexture, Scene *scene, Texture *texture, Image *image)
     {
@@ -223,7 +268,11 @@ namespace renderer
             }
         }
 
-        assert(acc_POS);
+        if (acc_POS == nullptr || acc_POS->count == 0) {
+            if (!scene->options.silent)
+                std::cout << "[ERROR] primitive vertices should not be null" << std::endl;
+            return;
+        }
 
         cgltf_float *vertices_data = nullptr;
         if (acc_POS) {
@@ -313,7 +362,7 @@ namespace renderer
             }
 
             free(tgt);
-        } else {
+        } else if (vertices_data && normals_data && texcoords_data) {
             cgltf_size num_vertices = acc_POS->count;
             auto *tgt = (cgltf_float *)calloc(1, num_vertices * 4 * sizeof(cgltf_float));
             smikktspace_data_t mikk_data = {};
@@ -579,7 +628,7 @@ namespace renderer
         }
 
         // Update node hierarchy in the scene
-        for (cgltf_size i = 0; i < data->scene->nodes_count; ++i) {
+        for (cgltf_size i = 0; data->scene && i < data->scene->nodes_count; ++i) {
             const auto cnode = data->scene->nodes[i];
             const auto node = &scene.allNodes.at(cnode - data->nodes);
             LoadNodeInScene(data, cnode, &scene, node, nullptr);
@@ -618,11 +667,11 @@ namespace renderer
         result = cgltf_load_buffers(&gltf_options, data, filename.c_str());
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
-                std::cout << "[ERROR] Failed to buffers from " << filename << std::endl;
+                std::cout << "[ERROR] Failed to load buffers from " << filename << std::endl;
             return false;
         }
 
-        result = cgltf_validate(data);
+        result = ValidateGLTF(data, scene.options);
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
                 std::cout << "[ERROR] Failed to validate " << filename << std::endl;

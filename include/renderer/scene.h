@@ -357,13 +357,13 @@ namespace renderer
         Mesh *mesh{ nullptr };
         Skin *skin{ nullptr };
         std::vector<Node *> children;
-        glm::mat4 matrix{ };
+        glm::mat4 matrix{};
         std::string name;
         bool visible{ true };
 
         // Used when skinning is disabled. This multiplies all matrices from parent.
         // Updated by UpdateJoints() in loader.cpp
-        glm::mat4 bindMatrix{ };
+        glm::mat4 bindMatrix{};
     };
 
     struct Model

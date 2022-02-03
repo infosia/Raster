@@ -35,9 +35,9 @@ namespace renderer
         ShaderContext &operator=(const ShaderContext &) = delete;
 
         glm::mat4 model{};
-        glm::mat4 view{ };
-        glm::mat4 viewport{  };
-        glm::mat4 projection{ };
+        glm::mat4 view{};
+        glm::mat4 viewport{};
+        glm::mat4 projection{};
 
         Camera camera{};
         Light light{};
@@ -178,7 +178,6 @@ namespace renderer
                 // double-sided
                 if (!material->doubleSided && backfacing)
                     return true;
-
 
                 if (material->baseColorTexture) {
                     const auto texture = material->baseColorTexture->image;
