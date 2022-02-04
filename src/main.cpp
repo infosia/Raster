@@ -62,6 +62,9 @@ int main(int argc, char **argv)
     options.verbose = verbose;
     options.silent = silent;
 
+    // Enable SSAA (Anti-Alias)
+    options.ssaa = true;
+
     //
     // default settings (overridden by config JSON if specified)
     //

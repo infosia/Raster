@@ -193,8 +193,8 @@ namespace renderer
 
         RenderOptions &options = scene.options;
 
-        const uint32_t width = options.width;
-        const uint32_t height = options.height;
+        const uint32_t width = options.width * (options.ssaa ? options.ssaaKernelSize : 1);
+        const uint32_t height = options.height * (options.ssaa ? options.ssaaKernelSize : 1);
 
         Camera &camera = options.camera;
 
@@ -220,7 +220,16 @@ namespace renderer
             }
         }
 
-        if (scene.options.verbose) {
+
+        if (options.ssaa) {
+            std::cout << "[INFO] Generating SSAA" << std::endl;
+            Image tmp(options.width, options.height, options.format);
+            generateSSAA(&tmp, &framebuffer, options.ssaaKernelSize);
+            framebuffer.reset(options.width, options.height, options.format);
+            framebuffer.copy(tmp);
+        }
+
+        if (options.verbose) {
             const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
             std::cout << "[INFO] Rendering done in " << msec << " msec" << std::endl;
         }

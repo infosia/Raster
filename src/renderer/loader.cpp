@@ -197,6 +197,9 @@ namespace renderer
             material->baseColorFactor_sRGB = glm::convertLinearToSRGB(material->baseColorFactor);
             const auto ctexture = cmat->pbr_metallic_roughness.base_color_texture.texture;
 
+            material->metallicFactor = cmat->pbr_metallic_roughness.metallic_factor;
+            material->roughnessFactor = cmat->pbr_metallic_roughness.roughness_factor;
+
             // Assuming textures are already loaded
             if (ctexture && scene->textures.size() > 0)
                 material->baseColorTexture = &scene->textures.at(ctexture - data->textures);

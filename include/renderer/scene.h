@@ -80,6 +80,12 @@ namespace renderer
             return data.data();
         }
 
+        void copy(Image &src)
+        {
+            assert(src.width == width && src.height == height && src.format == format);
+            memcpy(data.data(), src.buffer(), (width * height * (uint8_t)format));
+        }
+
         void set(uint32_t x, uint32_t y, Color &color);
         Color get(uint32_t x, uint32_t y) const;
 
@@ -237,6 +243,8 @@ namespace renderer
         AlphaMode alphaMode{ AlphaMode::Opaque };
         float alphaCutOff{ 0.f };
         float specularFactor{ 1.f };
+        float metallicFactor{ 1.f };
+        float roughnessFactor{ 0.f };
         bool doubleSided{ false };
         bool unlit{ false };
     };
@@ -413,11 +421,14 @@ namespace renderer
     {
         bool silent{ false };
         bool verbose{ false };
+        bool ssaa{ false };
 
         std::string input;
 
         uint32_t width{ 1024 };
         uint32_t height{ 1024 };
+        uint8_t ssaaKernelSize { 2 };
+
         Image::Format format{ Image::Format::RGB };
 
         Color background{ 255, 255, 255, 255 };
