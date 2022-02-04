@@ -203,7 +203,7 @@ namespace renderer
         ctx.model = getModelMatrix(options.model);
         ctx.bgColor = options.background;
         ctx.camera = camera;
-        ctx.light = options.light;
+        ctx.light = scene.lights.at(0);
 
         ctx.zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
         ctx.framebuffer->reset(width, height, options.format);
@@ -212,7 +212,11 @@ namespace renderer
         DefaultShader standard;
         OutlineShader outline;
 
-        std::vector<Shader *> shaders{ &standard, &outline };
+        std::vector<Shader *> shaders{ &standard };
+
+        if (options.outline) {
+            shaders.push_back(&outline);
+        }
 
         for (auto node : scene.children) {
             for (auto shader : shaders) {

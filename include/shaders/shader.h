@@ -212,13 +212,13 @@ namespace renderer
                         const auto image = material->normalTexture->image;
                         const auto normalMap = image->get(UV.x * image->width, UV.y * image->height);
                         N = glm::normalize(TBN * normalMap.toNormal());
-
-                        // Blinn-Phong
-                        specular = std::fmin(std::pow(std::fmax(glm::dot(halfDir, N), 0.f), shininess), ctx.maxShadingFactor);
-
-                        // Phong
-                        //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
                     }
+
+                    // Blinn-Phong
+                    specular = std::fmin(std::pow(std::fmax(glm::dot(halfDir, N), 0.f), shininess), ctx.maxShadingFactor);
+
+                    // Phong
+                    //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
 
                     const auto shadingFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
                     auto specularColor = ctx.light.color * specular * material->specularFactor * (material->metallicFactor - material->roughnessFactor);

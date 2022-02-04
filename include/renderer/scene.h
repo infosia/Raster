@@ -435,7 +435,6 @@ namespace renderer
         Color background{ 255, 255, 255, 255 };
 
         Camera camera{};
-        Light light{};
         Model model{};
     };
 
@@ -458,6 +457,7 @@ namespace renderer
         std::vector<Material> materials;
         std::vector<Node> allNodes;
         std::vector<Mesh> meshes;
+        std::vector<Light> lights;
 
         RenderOptions options;
     };

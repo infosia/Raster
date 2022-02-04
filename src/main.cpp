@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     app.add_option("-o,--output", output, "Output file name")->required();
 
     std::string config;
-    app.add_option("-c,--config", output, "Config JSON file name");
+    app.add_option("-c,--config", config, "Config JSON file name");
 
     bool verbose = false;
     app.add_flag("-v,--verbose", verbose, "Verbose log");
@@ -52,11 +52,11 @@ int main(int argc, char **argv)
     bool silent = false;
     app.add_flag("-s,--silient", silent, "Disable log");
 
-    bool enableSSAA = true;
-    app.add_flag("-a,--aa", silent, "Enable Anti-Alias (SSAA)");
+    bool enableSSAA = false;
+    app.add_flag("-a,--ssaa", silent, "Enable Anti-Alias (SSAA)");
 
-    bool enableOutline = true;
-    app.add_flag("-l,--outline", silent, "Enable outline");
+    bool enableOutline = false;
+    app.add_flag("-l,--outline", enableOutline, "Enable outline");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -94,7 +94,9 @@ int main(int argc, char **argv)
     }
 
     // Light color (used by reflection)
-    options.light.color = Color(206, 74, 0, 255);
+    Light light;
+    light.color = Color(206, 74, 0, 255);
+    scene.lights.push_back(light);
 
     //
     // Config JSON
@@ -102,7 +104,7 @@ int main(int argc, char **argv)
     if (!config.empty()) {
         nlohmann::json configJson;
         if (json_parse(config, &configJson, options.silent)) {
-
+            // TODO
         } else {
             return 1;
         }
