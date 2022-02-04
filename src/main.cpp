@@ -52,6 +52,12 @@ int main(int argc, char **argv)
     bool silent = false;
     app.add_flag("-s,--silient", silent, "Disable log");
 
+    bool enableSSAA = true;
+    app.add_flag("-a,--aa", silent, "Enable Anti-Alias (SSAA)");
+
+    bool enableOutline = true;
+    app.add_flag("-l,--outline", silent, "Enable outline");
+
     CLI11_PARSE(app, argc, argv);
 
     Scene scene;
@@ -62,14 +68,20 @@ int main(int argc, char **argv)
     options.verbose = verbose;
     options.silent = silent;
 
-    // Enable SSAA (Anti-Alias)
-    options.ssaa = true;
-
     //
     // default settings (overridden by config JSON if specified)
     //
 
+    // Enable SSAA (Anti-Alias)
+    // This will likely double memory consumption
+    options.ssaa = enableSSAA;
+
+    // Enable outline
+    // This will likely double rendering time
+    options.outline = enableOutline;
+
     // Output image size
+    // Bigger number means longer rendering time & more memory consumption
     options.width = 1024;
     options.height = 1024;
 

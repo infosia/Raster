@@ -422,12 +422,13 @@ namespace renderer
         bool silent{ false };
         bool verbose{ false };
         bool ssaa{ false };
+        bool outline{ false };
 
         std::string input;
 
         uint32_t width{ 1024 };
         uint32_t height{ 1024 };
-        uint8_t ssaaKernelSize { 2 };
+        uint8_t ssaaKernelSize{ 2 };
 
         Image::Format format{ Image::Format::RGB };
 

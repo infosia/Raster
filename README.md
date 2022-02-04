@@ -17,9 +17,9 @@ A software renderer which does not require any GPU resources. Works without Vulk
 - [x] Inverted hull outline
 - [x] Blinn-Phong reflection
 - [x] Vertex colors
+- [x] SSAA (anti-alias)
 - [ ] Morph targets
 - [ ] MToon shading
-- [ ] SSAA (anti-alias)
 
 ## Usage (Standalone renderer)
 

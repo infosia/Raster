@@ -220,9 +220,10 @@ namespace renderer
             }
         }
 
-
         if (options.ssaa) {
-            std::cout << "[INFO] Generating SSAA" << std::endl;
+            if (options.verbose)
+                std::cout << "[INFO] Generating SSAA" << std::endl;
+
             Image tmp(options.width, options.height, options.format);
             generateSSAA(&tmp, &framebuffer, options.ssaaKernelSize);
             framebuffer.reset(options.width, options.height, options.format);
