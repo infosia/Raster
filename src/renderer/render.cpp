@@ -61,7 +61,7 @@ namespace renderer
         }
     }
 
-    static glm::vec3 barycentric(glm::vec3& a, glm::vec3& b, glm::vec3& c, glm::vec3& p)
+    static glm::vec3 barycentric(glm::vec3 &a, glm::vec3 &b, glm::vec3 &c, glm::vec3 &p)
     {
         const auto v0 = b - a;
         const auto v1 = c - a;
@@ -118,26 +118,29 @@ namespace renderer
 
     inline bool backfacing(const glm::vec3 tri[3])
     {
-        const auto& a = tri[0];
-        const auto& b = tri[1];
-        const auto& c = tri[2];
+        const auto &a = tri[0];
+        const auto &b = tri[1];
+        const auto &c = tri[2];
         return (a.x * b.y - a.y * b.x + b.x * c.y - b.y * c.x + c.x * a.y - c.y * a.x) > 0;
     }
 
     inline void drawBB(Shader *shader, ShaderContext &ctx, const glm::uvec4 &bbox, glm::vec3 tri[3], glm::vec3 depths)
     {
+        const auto width = shader->framebuffer.width;
+        const auto height = shader->framebuffer.height;
+
         for (auto y = bbox.y; y != bbox.w + 1; ++y) {
             for (auto x = bbox.x; x != bbox.z + 1; ++x) {
                 glm::vec3 bcoords = barycentric(tri[0], tri[1], tri[2], glm::vec3{ x, y, 1.f });
                 if (bcoords.x >= 0.0f && bcoords.y >= 0.0f && bcoords.z >= 0.0f) {
                     const float frag_depth = glm::dot(bcoords, depths);
-                    if (inBounds(x, y, ctx.framebuffer->width, ctx.framebuffer->height) && frag_depth > ctx.zbuffer.at(x + y * ctx.framebuffer->width)) {
+                    if (inBounds(x, y, width, height) && frag_depth > shader->zbuffer.at(x + y * width)) {
                         Color color(0, 0, 0, 0);
                         const auto discarded = shader->fragment(ctx, bcoords, backfacing(tri), color);
                         if (discarded)
                             continue;
-                        ctx.zbuffer[x + y * ctx.framebuffer->width] = frag_depth;
-                        ctx.framebuffer->set(x, y, color);
+                        shader->zbuffer[x + y * width] = frag_depth;
+                        shader->framebuffer.set(x, y, color);
                     }
                 }
             }
@@ -165,8 +168,8 @@ namespace renderer
                         shader->vertex(ctx, i, 2),
                     };
                     const glm::vec3 depths(tri[0].z, tri[1].z, tri[2].z);
-                    if (isInTriangle(tri, ctx.framebuffer->width, ctx.framebuffer->height)) {
-                        drawBB(shader, ctx, bb(tri, ctx.framebuffer->width, ctx.framebuffer->height), tri, depths);
+                    if (isInTriangle(tri, shader->framebuffer.width, shader->framebuffer.height)) {
+                        drawBB(shader, ctx, bb(tri, shader->framebuffer.width, shader->framebuffer.height), tri, depths);
                     }
                 }
             }
@@ -188,8 +191,6 @@ namespace renderer
 
         ShaderContext ctx;
 
-        ctx.framebuffer = &framebuffer;
-
         RenderOptions &options = scene.options;
 
         const uint32_t width = options.width * (options.ssaa ? options.ssaaKernelSize : 1);
@@ -204,9 +205,10 @@ namespace renderer
         ctx.camera = camera;
         ctx.light = scene.light;
 
-        ctx.zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
-        ctx.framebuffer->reset(width, height, options.format);
-        ctx.framebuffer->fill(ctx.bgColor);
+        auto zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
+
+        framebuffer.reset(width, height, options.format);
+        framebuffer.fill(ctx.bgColor);
 
         DefaultShader standard;
         OutlineShader outline;
@@ -217,9 +219,30 @@ namespace renderer
             shaders.push_back(&outline);
         }
 
-        for (auto shader : shaders) {
+#pragma omp parallel for
+        for (int i = 0; i < shaders.size(); ++i) {
+            const auto shader = shaders.at(i);
+
+            shader->zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
+            shader->framebuffer.reset(width, height, options.format);
+
             for (auto node : scene.children) {
                 draw(options, shader, ctx, node);
+            }
+        }
+
+        auto dst = framebuffer.buffer();
+        const auto stride = options.format;
+        for (auto shader : shaders) {
+            const auto src = shader->framebuffer.buffer();
+            for (uint32_t i = 0; i < zbuffer.size(); ++i) {
+                const auto current = i * stride;
+                const auto dstDepth = zbuffer.at(i);
+                const auto srcDepth = shader->zbuffer.at(i);
+                if (dstDepth < srcDepth) {
+                    zbuffer[i] = srcDepth;
+                    memcpy(dst + current, src + current, stride);
+                }
             }
         }
 

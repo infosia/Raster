@@ -42,9 +42,6 @@ namespace renderer
         Camera camera{};
         Light *light{ nullptr };
 
-        Image *framebuffer{ nullptr };
-        std::vector<float> zbuffer;
-
         Color bgColor{ 255, 255, 255, 255 };
 
         // Max limit of shading color changes
@@ -56,6 +53,9 @@ namespace renderer
         const Primitive *primitive{ nullptr };
         const glm::mat4 *jointMatrices{ nullptr };
         glm::mat4 bindMatrix;
+
+        Image framebuffer;
+        std::vector<float> zbuffer;
 
         virtual glm::vec4 vertex(const ShaderContext &ctx, const uint32_t iface, const uint32_t ivert) = 0;
         virtual bool fragment(const ShaderContext &ctx, const glm::vec3 bar, bool backfacing, Color &color) = 0;
@@ -104,7 +104,7 @@ namespace renderer
             }
 
             auto gl_Position = glm::project(vertex, ctx.view * ctx.model * skinMat, ctx.projection,
-                glm::vec4{ 0.0f, 0.0f, ctx.framebuffer->width, ctx.framebuffer->height });
+                glm::vec4{ 0.0f, 0.0f, framebuffer.width, framebuffer.height });
 
             return glm::vec4(gl_Position, 1.f);
         }
@@ -146,7 +146,7 @@ namespace renderer
             const glm::mat3 skinMat3 = glm::mat3(skinMat4);
 
             auto gl_Position = glm::project(vert, ctx.view * skinMat4, ctx.projection,
-                glm::vec4{ 0.0f, 0.0f, ctx.framebuffer->width, ctx.framebuffer->height });
+                glm::vec4{ 0.0f, 0.0f, framebuffer.width, framebuffer.height });
 
             if (primitive->hasNormal())
                 vNormal[ivert] = primitive->normal(iface, ivert) * skinMat3;

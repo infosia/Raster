@@ -430,7 +430,7 @@ namespace renderer
         uint32_t height{ 1024 };
         uint8_t ssaaKernelSize{ 2 };
 
-        Image::Format format{ Image::Format::RGB };
+        Image::Format format{ Image::Format::RGBA };
 
         Color background{ 255, 255, 255, 255 };
 
