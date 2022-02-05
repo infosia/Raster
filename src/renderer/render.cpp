@@ -203,7 +203,7 @@ namespace renderer
         ctx.model = getModelMatrix(options.model);
         ctx.bgColor = options.background;
         ctx.camera = camera;
-        ctx.light = scene.lights.at(0);
+        ctx.light = scene.light;
 
         ctx.zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
         ctx.framebuffer->reset(width, height, options.format);

@@ -441,13 +441,20 @@ namespace renderer
     class Scene
     {
     public:
-        Scene() = default;
+        Scene()
+        {
+            lights.push_back(Light());
+            light = &lights.at(0);
+        };
         Scene(const Scene &) = delete;
         Scene &operator=(const Scene &) = delete;
 
         glm::vec3 center;
         glm::vec3 bbmin;
         glm::vec3 bbmax;
+
+        // default light
+        Light *light{ nullptr };
 
         std::vector<Node *> children;
 

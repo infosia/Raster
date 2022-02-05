@@ -94,9 +94,7 @@ int main(int argc, char **argv)
     }
 
     // Light color (used by reflection)
-    Light light;
-    light.color = Color(206, 74, 0, 255);
-    scene.lights.push_back(light);
+    scene.light->color = Color(206, 74, 0, 255);
 
     //
     // Config JSON

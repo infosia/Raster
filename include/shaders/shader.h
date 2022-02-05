@@ -40,7 +40,7 @@ namespace renderer
         glm::mat4 projection{};
 
         Camera camera{};
-        Light light{};
+        Light *light{ nullptr };
 
         Image *framebuffer{ nullptr };
         std::vector<float> zbuffer;
@@ -169,10 +169,13 @@ namespace renderer
         {
             const auto UV = vUV * bar;
 
+            // This shader uses single light only
+            const auto light = ctx.light;
+
             const auto inNormal = vNormal * bar;
             const auto inTangent = vTangent * glm::vec4(bar, 1.f);
             const auto inPosition = vPosition * bar;
-            const auto lightDir = glm::normalize(ctx.light.position - inPosition);
+            const auto lightDir = glm::normalize(light->position - inPosition);
             const auto viewDir = glm::normalize(ctx.camera.translation - inPosition);
             const auto halfDir = glm::normalize(lightDir - viewDir);
             const auto inColor = vColor * glm::vec4(bar, 1.f);
@@ -221,7 +224,7 @@ namespace renderer
                     //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
 
                     const auto shadingFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
-                    auto specularColor = ctx.light.color * specular * material->specularFactor * (material->metallicFactor - material->roughnessFactor);
+                    auto specularColor = light->color * specular * material->specularFactor * (material->metallicFactor - material->roughnessFactor);
 
                     if (shadingFactor > 0) {
                         Color newColor(color * shadingFactor + specularColor, color.A());
