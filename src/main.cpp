@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     app.add_flag("-s,--silient", silent, "Disable log");
 
     bool enableSSAA = false;
-    app.add_flag("-a,--ssaa", silent, "Enable Anti-Alias (SSAA)");
+    app.add_flag("-a,--ssaa", enableSSAA, "Enable Anti-Alias (SSAA)");
 
     bool enableOutline = false;
     app.add_flag("-l,--outline", enableOutline, "Enable outline");

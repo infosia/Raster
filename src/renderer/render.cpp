@@ -56,13 +56,12 @@ namespace renderer
                 R /= (float)sq;
                 G /= (float)sq;
                 B /= (float)sq;
-                Color color((uint8_t)R, (uint8_t)G, (uint8_t)B, 1);
-                dst->set(x, y, color);
+                dst->set(x, y, Color((uint8_t)R, (uint8_t)G, (uint8_t)B, 255));
             }
         }
     }
 
-    static glm::vec3 barycentric(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 p)
+    static glm::vec3 barycentric(glm::vec3& a, glm::vec3& b, glm::vec3& c, glm::vec3& p)
     {
         const auto v0 = b - a;
         const auto v1 = c - a;
@@ -119,13 +118,13 @@ namespace renderer
 
     inline bool backfacing(const glm::vec3 tri[3])
     {
-        const auto a = tri[0];
-        const auto b = tri[1];
-        const auto c = tri[2];
+        const auto& a = tri[0];
+        const auto& b = tri[1];
+        const auto& c = tri[2];
         return (a.x * b.y - a.y * b.x + b.x * c.y - b.y * c.x + c.x * a.y - c.y * a.x) > 0;
     }
 
-    inline void drawBB(Shader *shader, ShaderContext &ctx, const glm::uvec4 &bbox, const glm::vec3 tri[3], glm::vec3 depths)
+    inline void drawBB(Shader *shader, ShaderContext &ctx, const glm::uvec4 &bbox, glm::vec3 tri[3], glm::vec3 depths)
     {
         for (auto y = bbox.y; y != bbox.w + 1; ++y) {
             for (auto x = bbox.x; x != bbox.z + 1; ++x) {
@@ -218,8 +217,8 @@ namespace renderer
             shaders.push_back(&outline);
         }
 
-        for (auto node : scene.children) {
-            for (auto shader : shaders) {
+        for (auto shader : shaders) {
+            for (auto node : scene.children) {
                 draw(options, shader, ctx, node);
             }
         }
