@@ -62,7 +62,7 @@ namespace renderer
         }
     }
 
-    static glm::vec3 barycentric(glm::vec3 &a, glm::vec3 &b, glm::vec3 &c, const glm::vec3 &p)
+    static glm::vec3 barycentric(glm::vec3 &a, glm::vec3 &b, glm::vec3 &c, glm::vec3 &p)
     {
         const auto v0 = b - a;
         const auto v1 = c - a;
@@ -132,7 +132,7 @@ namespace renderer
 
         for (auto y = bbox.y; y != bbox.w + 1; ++y) {
             for (auto x = bbox.x; x != bbox.z + 1; ++x) {
-                const auto p = glm::vec3(x, y, 1.f);
+                auto p = glm::vec3(x, y, 1.f);
                 glm::vec3 bcoords = barycentric(tri[0], tri[1], tri[2], p);
                 if (bcoords.x >= 0.0f && bcoords.y >= 0.0f && bcoords.z >= 0.0f) {
                     const float frag_depth = glm::dot(bcoords, depths);
