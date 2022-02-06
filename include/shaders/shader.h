@@ -54,7 +54,7 @@ namespace renderer
     {
         const Primitive *primitive{ nullptr };
         const glm::mat4 *jointMatrices{ nullptr };
-        glm::mat4 bindMatrix;
+        glm::mat4 bindMatrix{};
 
         Image framebuffer;
         std::vector<float> zbuffer;
@@ -91,6 +91,7 @@ namespace renderer
 
         OutlineShader()
             : vNormal()
+            , vUV()
         {
         }
 
@@ -163,6 +164,7 @@ namespace renderer
             , vTangent()
             , vColor()
             , vUV()
+            , vPosition()
         {
         }
 

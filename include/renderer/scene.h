@@ -467,9 +467,9 @@ namespace renderer
         Scene(const Scene &) = delete;
         Scene &operator=(const Scene &) = delete;
 
-        glm::vec3 center;
-        glm::vec3 bbmin;
-        glm::vec3 bbmax;
+        glm::vec3 center{};
+        glm::vec3 bbmin{};
+        glm::vec3 bbmax{};
 
         // default light
         Light *light{ nullptr };
