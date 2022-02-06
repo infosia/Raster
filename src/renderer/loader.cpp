@@ -629,8 +629,8 @@ namespace renderer
 
         auto vrm0 = &scene.vrm0;
 
-        for (const auto mat : vrm.materialProperties) {
-            for (const auto p : mat.floatProperties) {
+        for (const auto &mat : vrm.materialProperties) {
+            for (const auto &p : mat.floatProperties) {
                 const auto pkey = p.first;
                 const auto pvalue = p.second;
                 if (pkey == "_OutlineWidth") {
@@ -641,7 +641,7 @@ namespace renderer
                     vrm0->outlineLightingMix = pvalue;
                 }
             }
-            for (const auto p : mat.textureProperties) {
+            for (const auto &p : mat.textureProperties) {
                 const auto pkey = p.first;
                 const auto pvalue = p.second;
                 if (pkey == "_OutlineWidthTexture" && pvalue < scene.textures.size()) {
@@ -649,7 +649,7 @@ namespace renderer
                     vrm0->outlineWidthTexture = &scene.images.at(pvalue);
                 }
             }
-            for (const auto p : mat.vectorProperties) {
+            for (const auto &p : mat.vectorProperties) {
                 const auto pkey = p.first;
                 const auto pvalue = p.second;
                 if (pkey == "_OutlineColor" && pvalue.size() == 4) {
