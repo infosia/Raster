@@ -47,36 +47,36 @@ namespace renderer
         uint8_t *buffer;
     } smikktspace_data_t;
 
-    static int tm_mikk_getNumFaces(const SMikkTSpaceContext *pContext)
+    static int mikk_getNumFaces(const SMikkTSpaceContext *pContext)
     {
         smikktspace_data_t *data = (smikktspace_data_t *)pContext->m_pUserData;
         return (int)data->vertex_count;
     }
 
-    static int tm_mikk_getNumVerticesOfFace(const SMikkTSpaceContext *pContext, const int iFace)
+    static int mikk_getNumVerticesOfFace(const SMikkTSpaceContext *pContext, const int iFace)
     {
         return 3;
     }
 
-    static void tm_mikk_getPosition(const SMikkTSpaceContext *pContext, float *fvPosOut, const int iFace, const int iVert)
+    static void mikk_getPosition(const SMikkTSpaceContext *pContext, float *fvPosOut, const int iFace, const int iVert)
     {
         smikktspace_data_t *data = (smikktspace_data_t *)pContext->m_pUserData;
         memcpy(fvPosOut, (data->vertices + (iFace * 3)), 3 * sizeof(float));
     }
 
-    static void tm_mikk_getNormal(const SMikkTSpaceContext *pContext, float *fvNormOut, const int iFace, const int iVert)
+    static void mikk_getNormal(const SMikkTSpaceContext *pContext, float *fvNormOut, const int iFace, const int iVert)
     {
         smikktspace_data_t *data = (smikktspace_data_t *)pContext->m_pUserData;
         memcpy(fvNormOut, (data->normals + (iFace * 3)), 3 * sizeof(float));
     }
 
-    static void tm_mikk_getTexCoord(const SMikkTSpaceContext *pContext, float *fvTexcOut, const int iFace, const int iVert)
+    static void mikk_getTexCoord(const SMikkTSpaceContext *pContext, float *fvTexcOut, const int iFace, const int iVert)
     {
         smikktspace_data_t *data = (smikktspace_data_t *)pContext->m_pUserData;
         memcpy(fvTexcOut, (data->texcoord + (iFace * 2)), 2 * sizeof(float));
     }
 
-    static void tm_mikk_setTSpace(const SMikkTSpaceContext *pContext, const float fvTangent[], const float fvBiTangent[], const float fMagS, const float fMagT,
+    static void mikk_setTSpace(const SMikkTSpaceContext *pContext, const float fvTangent[], const float fvBiTangent[], const float fMagS, const float fMagT,
         const tbool bIsOrientationPreserving, const int iFace, const int iVert)
     {
         smikktspace_data_t *data = (smikktspace_data_t *)pContext->m_pUserData;
@@ -92,16 +92,16 @@ namespace renderer
     }
 
     static SMikkTSpaceInterface tangent_interface = {
-        tm_mikk_getNumFaces,
-        tm_mikk_getNumVerticesOfFace,
-        tm_mikk_getNormal,
-        tm_mikk_getPosition,
-        tm_mikk_getTexCoord,
+        mikk_getNumFaces,
+        mikk_getNumVerticesOfFace,
+        mikk_getNormal,
+        mikk_getPosition,
+        mikk_getTexCoord,
         nullptr,
-        tm_mikk_setTSpace
+        mikk_setTSpace
     };
 
-    static bool checkNodeHierarchy(cgltf_node *node, std::set<cgltf_node *> parents)
+    static bool CheckNodeHierarchy(cgltf_node *node, std::set<cgltf_node *> parents)
     {
         // node should not point one of its parent
         // it causes infinite loop
@@ -115,7 +115,7 @@ namespace renderer
             if (child->parent != node)
                 return false;
 
-            if (!checkNodeHierarchy(child, parents))
+            if (!CheckNodeHierarchy(child, parents))
                 return false;
         }
         return true;
@@ -135,7 +135,7 @@ namespace renderer
 
         for (cgltf_size i = 0; i < data->scene->nodes_count; ++i) {
             std::set<cgltf_node *> parents;
-            if (!checkNodeHierarchy(data->scene->nodes[i], parents)) {
+            if (!CheckNodeHierarchy(data->scene->nodes[i], parents)) {
                 if (!options.silent)
                     std::cout << "[ERROR] Invaid node hierarchy found in glTF." << std::endl;
                 return cgltf_result_invalid_gltf;
