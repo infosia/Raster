@@ -28,9 +28,15 @@ namespace renderer
 {
     void Image::fill(Color &color)
     {
-        for (uint32_t x = 0; x < width; ++x)
-            for (uint32_t y = 0; y < height; ++y)
-                memcpy(data.data() + ((x + y * width) * format), color.buffer(), format);
+        for (uint32_t x = 0; x < width; ++x) {
+            for (uint32_t y = 0; y < height; ++y) {
+                auto dst = data.data() + ((x + y * width) * format);
+                // Stop filling when pixel is already painted
+                if (format == Format::RGBA && dst[3] != 0)
+                    continue;
+                memcpy(dst, color.buffer(), format);
+            }
+        }
     }
 
     void Image::set(uint32_t x, uint32_t y, Color &c)

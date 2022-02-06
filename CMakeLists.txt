@@ -30,6 +30,7 @@ set (BUILD_INCLUDES
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/ghc
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/nlohmann
   ${CMAKE_CURRENT_SOURCE_DIR}/extern/mikktspace
+  ${CMAKE_CURRENT_SOURCE_DIR}/extern/VRMC
 )
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extern/mikktspace)

@@ -46,6 +46,8 @@ namespace renderer
 
         // Max limit of shading color changes
         float maxShadingFactor = 0.8f;
+
+        VRM0Properties *vrm0{ nullptr };
     };
 
     struct Shader
@@ -82,6 +84,10 @@ namespace renderer
     struct OutlineShader : Shader
     {
         glm::mat3x3 vNormal;
+        glm::mat3x2 vUV;
+
+        Color outlineColor{ 0, 0, 0, 178 }; // black with mix
+        float outlineWidth{ 0.1f };
 
         OutlineShader()
             : vNormal()
@@ -98,10 +104,16 @@ namespace renderer
             if (primitive->hasNormal()) {
                 vNormal[ivert] = primitive->normal(iface, ivert) * glm::mat3(ctx.model * skinMat);
 
+                if (ctx.vrm0 && ctx.vrm0->hasOutlineWidth)
+                    outlineWidth = ctx.vrm0->outlineWidth;
+
                 const auto normal = glm::normalize(primitive->normal(iface, ivert));
-                const auto outlineOffset = normal * 0.002f;
+                const auto outlineOffset = normal * 0.01f * outlineWidth;
                 vertex = vertex + outlineOffset;
             }
+
+            if (primitive->hasUV())
+                vUV[ivert] = primitive->uv(iface, ivert);
 
             auto gl_Position = glm::project(vertex, ctx.view * ctx.model * skinMat, ctx.projection,
                 glm::vec4{ 0.0f, 0.0f, framebuffer.width, framebuffer.height });
@@ -114,8 +126,24 @@ namespace renderer
             if (!backfacing)
                 return true;
 
-            Color outlineColor(50, 50, 50, 255);
-            color.copy(outlineColor);
+            float outlineWidthFactor = 1.f;
+            float outlineLightingMix = 1.f;
+
+            if (ctx.vrm0) {
+                if (ctx.vrm0->hasOutlineColor)
+                    outlineColor = ctx.vrm0->outlineColor;
+
+                if (ctx.vrm0->hasOutlineLightingMix)
+                    outlineLightingMix = ctx.vrm0->outlineLightingMix;
+
+                if (ctx.vrm0->hasOutlineWidthTexture && ctx.vrm0->outlineWidthTexture) {
+                    const auto UV = vUV * bar;
+                    const auto texture = ctx.vrm0->outlineWidthTexture;
+                    outlineWidthFactor = texture->get(UV.x * texture->width, UV.y * texture->height).Rf();
+                }
+            }
+
+            color.copy(outlineColor * outlineWidthFactor * outlineLightingMix);
 
             return false;
         }
@@ -193,6 +221,10 @@ namespace renderer
 
                     if (material->alphaMode != AlphaMode::Opaque && texture->format == Image::Format::RGBA && diffuse.A() == 0)
                         return true;
+
+                    if (material->alphaMode == AlphaMode::Opaque) {
+                        diffuse.opeque();
+                    }
 
                     color.copy(color + diffuse);
                 } else {

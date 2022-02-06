@@ -20,3 +20,6 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
+
+#define USE_VRMC_VRM_0_0
+#include <VRM.h>

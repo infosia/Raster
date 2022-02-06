@@ -205,10 +205,11 @@ namespace renderer
         ctx.camera = camera;
         ctx.light = scene.light;
 
+        ctx.vrm0 = &scene.vrm0;
+
         auto zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
 
         framebuffer.reset(width, height, options.format);
-        framebuffer.fill(ctx.bgColor);
 
         DefaultShader standard;
         OutlineShader outline;
@@ -233,18 +234,31 @@ namespace renderer
 
         auto dst = framebuffer.buffer();
         const auto stride = options.format;
-        for (auto shader : shaders) {
-            const auto src = shader->framebuffer.buffer();
-            for (uint32_t i = 0; i < zbuffer.size(); ++i) {
+        for (uint32_t i = 0; i < zbuffer.size(); ++i) {
+            for (auto shader : shaders) {
+                const auto src = shader->framebuffer.buffer();
                 const auto current = i * stride;
                 const auto dstDepth = zbuffer.at(i);
                 const auto srcDepth = shader->zbuffer.at(i);
                 if (dstDepth < srcDepth) {
                     zbuffer[i] = srcDepth;
-                    memcpy(dst + current, src + current, stride);
+
+                    // mix color when alpha is color is set (Used by outline for now)
+                    if (stride == Image::Format::RGBA && (src + current)[3] != 255) {
+                        const auto srcColor = Color(src + current, stride);
+                        const auto dstColor = Color(dst + current, stride);
+                        const auto alpha = srcColor.Af();
+                        auto mixed = (dstColor * (1.f - alpha)) + (srcColor * alpha);
+                        memcpy(dst + current, mixed.buffer(), stride);
+                    } else {
+                        memcpy(dst + current, src + current, stride);
+                    }
                 }
             }
         }
+
+        // Fill the background anywhere pixel alpha equals zero
+        framebuffer.fill(ctx.bgColor);
 
         if (options.ssaa) {
             if (options.verbose)

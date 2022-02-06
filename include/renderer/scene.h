@@ -176,6 +176,11 @@ namespace renderer
             return glm::vec3(Rf() * 2.f - 1.f, Gf() * 2.f - 1.f, Bf() * 2.f - 1.f);
         }
 
+        void opeque()
+        {
+            rgba[3] = 255;
+        }
+
         Color operator*(const float intensity) const
         {
             Color res = *this;
@@ -438,6 +443,19 @@ namespace renderer
         Model model{};
     };
 
+    struct VRM0Properties
+    {
+        float outlineWidth{ 0.f };
+        float outlineLightingMix{ 1.f };
+        Color outlineColor{ 0, 0, 0, 255 };
+        Image *outlineWidthTexture{ nullptr };
+
+        bool hasOutlineWidth{ false };
+        bool hasOutlineLightingMix{ false };
+        bool hasOutlineColor{ false };
+        bool hasOutlineWidthTexture{ false };
+    };
+
     class Scene
     {
     public:
@@ -465,6 +483,8 @@ namespace renderer
         std::vector<Node> allNodes;
         std::vector<Mesh> meshes;
         std::vector<Light> lights;
+
+        VRM0Properties vrm0;
 
         RenderOptions options;
     };

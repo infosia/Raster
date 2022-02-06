@@ -606,6 +606,62 @@ namespace renderer
     }
 #endif // ifdef WIN32
 
+    static bool LoadVRM0(cgltf_data *data, Scene &scene)
+    {
+        char *vrm0_json = nullptr;
+        for (cgltf_size i = 0; i < data->data_extensions_count; ++i) {
+            if (strcmp(data->data_extensions[i].name, "VRM") == 0) {
+                vrm0_json = data->data_extensions[i].data;
+                break;
+            }
+        }
+
+        if (vrm0_json == nullptr)
+            return false;
+
+        const nlohmann::json VRM0_OBJ = nlohmann::json::parse(vrm0_json);
+
+        if (!VRM0_OBJ.is_object())
+            return false;
+
+        VRMC_VRM_0_0::Vrm vrm;
+        VRMC_VRM_0_0::from_json(VRM0_OBJ, vrm);
+
+        auto vrm0 = &scene.vrm0;
+
+        for (const auto mat : vrm.materialProperties) {
+            for (const auto p : mat.floatProperties) {
+                const auto pkey = p.first;
+                const auto pvalue = p.second;
+                if (pkey == "_OutlineWidth") {
+                    vrm0->hasOutlineWidth = true;
+                    vrm0->outlineWidth = pvalue;
+                } else if (pkey == "_OutlineLightingMix") {
+                    vrm0->hasOutlineLightingMix = true;
+                    vrm0->outlineLightingMix = pvalue;
+                }
+            }
+            for (const auto p : mat.textureProperties) {
+                const auto pkey = p.first;
+                const auto pvalue = p.second;
+                if (pkey == "_OutlineWidthTexture" && pvalue < scene.textures.size()) {
+                    vrm0->hasOutlineWidthTexture = true;
+                    vrm0->outlineWidthTexture = &scene.images.at(pvalue);
+                }
+            }
+            for (const auto p : mat.vectorProperties) {
+                const auto pkey = p.first;
+                const auto pvalue = p.second;
+                if (pkey == "_OutlineColor" && pvalue.size() == 4) {
+                    vrm0->hasOutlineColor = true;
+                    vrm0->outlineColor = Color(pvalue[0] * 255, pvalue[1] * 255, pvalue[2] * 255, pvalue[3] * 255);
+                }
+            }
+        }
+
+        return true;
+    }
+
     static bool LoadScene(cgltf_data *data, Scene &scene)
     {
         const auto start = std::chrono::system_clock::now();
@@ -658,6 +714,9 @@ namespace renderer
         for (const auto node : scene.children) {
             UpdateJoints(node);
         }
+
+        // VRM 0.0
+        LoadVRM0(data, scene);
 
         if (scene.options.verbose) {
             const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
