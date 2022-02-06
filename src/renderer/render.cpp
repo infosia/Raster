@@ -56,12 +56,13 @@ namespace renderer
                 R /= (float)sq;
                 G /= (float)sq;
                 B /= (float)sq;
-                dst->set(x, y, Color((uint8_t)R, (uint8_t)G, (uint8_t)B, 255));
+                Color newColor = Color((uint8_t)R, (uint8_t)G, (uint8_t)B, 255);
+                dst->set(x, y, newColor);
             }
         }
     }
 
-    static glm::vec3 barycentric(glm::vec3 &a, glm::vec3 &b, glm::vec3 &c, glm::vec3 &p)
+    static glm::vec3 barycentric(glm::vec3 &a, glm::vec3 &b, glm::vec3 &c, const glm::vec3 &p)
     {
         const auto v0 = b - a;
         const auto v1 = c - a;
@@ -131,7 +132,8 @@ namespace renderer
 
         for (auto y = bbox.y; y != bbox.w + 1; ++y) {
             for (auto x = bbox.x; x != bbox.z + 1; ++x) {
-                glm::vec3 bcoords = barycentric(tri[0], tri[1], tri[2], glm::vec3{ x, y, 1.f });
+                const auto p = glm::vec3(x, y, 1.f);
+                glm::vec3 bcoords = barycentric(tri[0], tri[1], tri[2], p);
                 if (bcoords.x >= 0.0f && bcoords.y >= 0.0f && bcoords.z >= 0.0f) {
                     const float frag_depth = glm::dot(bcoords, depths);
                     if (inBounds(x, y, width, height) && frag_depth > shader->zbuffer.at(x + y * width)) {
@@ -248,7 +250,9 @@ namespace renderer
                         const auto srcColor = Color(src + current, stride);
                         const auto dstColor = Color(dst + current, stride);
                         const auto alpha = srcColor.Af();
-                        auto mixed = (dstColor * (1.f - alpha)) + (srcColor * alpha);
+                        Color dstAColor = dstColor * (1.f - alpha);
+                        Color srcAColor = srcColor * alpha;
+                        auto mixed = dstAColor + srcAColor;
                         memcpy(dst + current, mixed.buffer(), stride);
                     } else {
                         memcpy(dst + current, src + current, stride);

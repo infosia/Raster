@@ -143,7 +143,8 @@ namespace renderer
                 }
             }
 
-            color.copy(outlineColor * outlineWidthFactor * outlineLightingMix);
+            Color newColor = outlineColor * outlineWidthFactor * outlineLightingMix;
+            color.copy(newColor);
 
             return false;
         }
@@ -226,10 +227,12 @@ namespace renderer
                         diffuse.opeque();
                     }
 
-                    color.copy(color + diffuse);
+                    Color newColor = color + diffuse;
+                    color.copy(newColor);
                 } else {
                     // base color (gamma corrected)
-                    color.copy(color + material->baseColorFactor_sRGB);
+                    Color newColor = color + material->baseColorFactor_sRGB;
+                    color.copy(newColor);
                 }
 
                 if (!material->unlit) {
@@ -270,7 +273,8 @@ namespace renderer
             }
 
             if (primitive->hasColor()) {
-                color.copy(color * glm::vec4(inColor, 1.f));
+                Color newColor = color * glm::vec4(inColor, 1.f);
+                color.copy(newColor);
             }
 
             return false;
