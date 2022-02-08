@@ -54,9 +54,10 @@ namespace renderer
     {
         const Primitive *primitive{ nullptr };
         const glm::mat4 *jointMatrices{ nullptr };
+        const std::vector<Morph> *morphs{ nullptr };
         glm::mat4 bindMatrix{};
 
-        Image framebuffer;
+        Image framebuffer{};
         std::vector<float> zbuffer;
 
         virtual glm::vec4 vertex(const ShaderContext &ctx, const uint32_t iface, const uint32_t ivert) = 0;
@@ -73,6 +74,42 @@ namespace renderer
                 skinMat = bindMatrix;
             }
             return skinMat;
+        }
+
+        void morphVert(const uint32_t iface, const uint32_t ivert, glm::vec3 *vert)
+        {
+            // In glTF, all primitive target count under a mesh supposed to match.
+            // However it tends to be omitted especially in old glTF.
+            // At least wanted to make sure not to crash here.
+            const auto numTargets = primitive->numTargets();
+            if (morphs == nullptr || numTargets > morphs->size())
+                return;
+
+            for (size_t i = 0; i < numTargets; ++i) {
+                *vert = *vert + (primitive->vertAtTarget(iface, ivert, i) * morphs->at(i).weight);
+            }
+        }
+
+        void morphNormal(const uint32_t iface, const uint32_t ivert, glm::vec3 *normal)
+        {
+            const auto numTargets = primitive->numTargets();
+            if (morphs == nullptr || numTargets > morphs->size())
+                return;
+
+            for (size_t i = 0; i < numTargets; ++i) {
+                *normal = *normal + (primitive->normalAtTarget(iface, ivert, i) * morphs->at(i).weight);
+            }
+        }
+
+        void morphTangent(const uint32_t iface, const uint32_t ivert, glm::vec4 *tangent)
+        {
+            const auto numTargets = primitive->numTargets();
+            if (morphs == nullptr || numTargets > morphs->size())
+                return;
+
+            for (size_t i = 0; i < numTargets; ++i) {
+                *tangent = *tangent + (primitive->tangentAtTarget(iface, ivert, i) * morphs->at(i).weight);
+            }
         }
     };
 
@@ -100,16 +137,20 @@ namespace renderer
             assert(primitive != nullptr);
 
             auto vertex = primitive->vert(iface, ivert);
+            morphVert(iface, ivert, &vertex);
+
             const glm::mat4 skinMat = skinning(ctx, iface, ivert);
 
             if (primitive->hasNormal()) {
-                vNormal[ivert] = primitive->normal(iface, ivert) * glm::mat3(ctx.model * skinMat);
+                auto normal = primitive->normal(iface, ivert);
+                morphNormal(iface, ivert, &normal);
+
+                vNormal[ivert] = normal * glm::mat3(ctx.model * skinMat);
 
                 if (ctx.vrm0 && ctx.vrm0->hasOutlineWidth)
                     outlineWidth = ctx.vrm0->outlineWidth;
 
-                const auto normal = glm::normalize(primitive->normal(iface, ivert));
-                const auto outlineOffset = normal * 0.01f * outlineWidth;
+                const auto outlineOffset = glm::normalize(normal) * 0.01f * outlineWidth;
                 vertex = vertex + outlineOffset;
             }
 
@@ -172,18 +213,28 @@ namespace renderer
         {
             assert(primitive != nullptr);
 
-            const auto vert = primitive->vert(iface, ivert);
+            auto vert = primitive->vert(iface, ivert);
+            morphVert(iface, ivert, &vert);
+
             const glm::mat4 skinMat4 = ctx.model * skinning(ctx, iface, ivert);
             const glm::mat3 skinMat3 = glm::mat3(skinMat4);
 
             auto gl_Position = glm::project(vert, ctx.view * skinMat4, ctx.projection,
                 glm::vec4{ 0.0f, 0.0f, framebuffer.width, framebuffer.height });
 
-            if (primitive->hasNormal())
-                vNormal[ivert] = primitive->normal(iface, ivert) * skinMat3;
+            if (primitive->hasNormal()) {
+                auto normal = primitive->normal(iface, ivert);
+                morphNormal(iface, ivert, &normal);
 
-            if (primitive->hasTangent())
-                vTangent[ivert] = primitive->tangent(iface, ivert) * skinMat3;
+                vNormal[ivert] = normal * skinMat3;
+            }
+
+            if (primitive->hasTangent()) {
+                auto tangent = primitive->tangent(iface, ivert);
+                morphTangent(iface, ivert, &tangent);
+
+                vTangent[ivert] = tangent * skinMat3;
+            }
 
             if (primitive->hasColor())
                 vColor[ivert] = primitive->color(iface, ivert);

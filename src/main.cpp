@@ -23,7 +23,6 @@
 #include "raster.h"
 
 #include <CLI11.hpp>
-#include <json.hpp>
 
 #include <ghc/filesystem.hpp>
 

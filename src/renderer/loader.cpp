@@ -21,8 +21,8 @@
  * SOFTWARE.
  */
 
-#include "renderer/loader.h"
 #include "pch.h"
+#include "renderer/loader.h"
 #include "renderer/scene.h"
 
 #ifdef _OPENMP
@@ -280,6 +280,8 @@ namespace renderer
             return;
         }
 
+        cgltf_size num_vertices = acc_POS->count;
+
         cgltf_float *vertices_data = nullptr;
         if (acc_POS) {
             const auto num_components = cgltf_num_components(acc_POS->type);
@@ -369,7 +371,6 @@ namespace renderer
 
             free(tgt);
         } else if (vertices_data && normals_data && texcoords_data) {
-            cgltf_size num_vertices = acc_POS->count;
             auto *tgt = (cgltf_float *)calloc(1, num_vertices * 4 * sizeof(cgltf_float));
             smikktspace_data_t mikk_data = {};
             mikk_data.normals = normals_data;
@@ -415,6 +416,77 @@ namespace renderer
         primitive->indices.resize(num_indices);
         for (cgltf_size i = 0; i < num_indices; ++i) {
             primitive->indices[i] = cgltf_accessor_read_index(indices, i);
+        }
+
+        primitive->targets.resize(cprim->targets_count);
+        for (cgltf_size i = 0; i < cprim->targets_count; ++i) {
+            Target *target = &primitive->targets.at(i);
+            cgltf_morph_target *ctarget = &cprim->targets[i];
+            cgltf_accessor *pos = NULL;
+            cgltf_accessor *nrm = NULL;
+            cgltf_accessor *tng = NULL;
+            for (cgltf_size k = 0; k < ctarget->attributes_count; ++k) {
+                cgltf_attribute *attr = &ctarget->attributes[k];
+                if (attr->type == cgltf_attribute_type_position)
+                    pos = attr->data;
+                else if (attr->type == cgltf_attribute_type_normal)
+                    nrm = attr->data;
+                else if (attr->type == cgltf_attribute_type_tangent)
+                    tng = attr->data;
+            }
+
+            cgltf_float *target_vertices_data = nullptr;
+            if (pos != NULL) {
+                assert(acc_POS->count == pos->count);
+                const auto num_components = cgltf_num_components(pos->type);
+                const auto unpack_count = pos->count * num_components;
+                assert(num_components == 3);
+                target_vertices_data = (cgltf_float *)malloc(unpack_count * sizeof(cgltf_float));
+                cgltf_accessor_unpack_floats(pos, target_vertices_data, unpack_count);
+
+                target->vertices.resize(num_vertices);
+                for (cgltf_size i = 0; i < num_vertices; ++i) {
+                    target->vertices[i] = glm::make_vec3(target_vertices_data + (i * num_components));
+                }
+            }
+
+            cgltf_float *target_normals_data = nullptr;
+            if (nrm != NULL) {
+                assert(acc_POS->count == nrm->count);
+                const auto num_components = cgltf_num_components(nrm->type);
+                const auto unpack_count = nrm->count * num_components;
+                assert(num_components == 3);
+                target_normals_data = (cgltf_float *)malloc(unpack_count * sizeof(cgltf_float));
+                cgltf_accessor_unpack_floats(nrm, target_normals_data, unpack_count);
+
+                target->normals.resize(num_vertices);
+                for (cgltf_size i = 0; i < num_vertices; ++i) {
+                    target->normals[i] = glm::make_vec3(target_normals_data + (i * num_components));
+                }
+            }
+
+            if (tng != NULL) {
+                assert(acc_POS->count == tng->count);
+                const auto num_components = cgltf_num_components(tng->type);
+                const auto unpack_count = tng->count * num_components;
+                assert(num_components == 4);
+                cgltf_float *target_tangents_data = (cgltf_float *)malloc(unpack_count * sizeof(cgltf_float));
+
+                cgltf_accessor_unpack_floats(tng, target_tangents_data, unpack_count);
+
+                target->tangents.resize(num_vertices);
+                for (cgltf_size i = 0; i < num_vertices; ++i) {
+                    target->tangents[i] = glm::make_vec4(target_tangents_data + (i * num_components));
+                }
+
+                free(target_tangents_data);
+            }
+
+            if (target_vertices_data)
+                free(target_vertices_data);
+
+            if (target_normals_data)
+                free(target_normals_data);
         }
     }
 
@@ -483,10 +555,58 @@ namespace renderer
         free(ibm);
     }
 
+    static std::vector<std::string> json_get_string_items(std::string name, nlohmann::json obj)
+    {
+        const auto &items_obj = obj[name];
+        std::vector<std::string> items;
+        if (items_obj.is_array()) {
+            for (const auto &item : items_obj) {
+                items.push_back(item.get<std::string>());
+            }
+        }
+        return items;
+    }
+
     static void LoadMesh(cgltf_data *cdata, cgltf_mesh *cmesh, Scene *scene, Mesh *mesh)
     {
         if (cmesh->name) {
             mesh->name = cmesh->name;
+        }
+
+        if (cmesh->target_names_count > 0) {
+            mesh->morphs.resize(cmesh->target_names_count);
+            for (cgltf_size i = 0; i < cmesh->target_names_count; ++i) {
+                mesh->morphs[i].name = cmesh->target_names[i];
+                mesh->morphs[i].weight = (cmesh->weights_count == cmesh->target_names_count) ? cmesh->weights[i] : 0.f;
+            }
+        } else {
+            // In glTF, all primitive target count under a mesh supposed to match.
+            // However it tends to be omitted especially in old glTF. Getting max count would work in this case.
+            // Also note that old glTF tends to store target names under primitive/extras, not under mesh/extras.
+            std::vector<std::string> targetNames;
+            cgltf_size targetCount = 0;
+            for (cgltf_size i = 0; i < cmesh->primitives_count; ++i) {
+                const auto pri = &cmesh->primitives[i];
+
+                cgltf_size dest_size = 0;
+                if (targetCount == 0 && cgltf_copy_extras_json(cdata, &pri->extras, NULL, &dest_size) == cgltf_result_success) {
+                    char *extras = (char *)malloc(dest_size);
+                    if (cgltf_copy_extras_json(cdata, &pri->extras, extras, &dest_size) == cgltf_result_success) {
+                        auto j = nlohmann::json::parse(extras, nullptr, false);
+                        if (!j.is_discarded()) {
+                            targetNames = json_get_string_items("targetNames", j);
+                            targetCount = targetNames.size();
+                        }
+                    }
+                    free(extras);
+                } else {
+                    targetCount = std::max(pri->targets_count, targetCount);
+                }
+            }
+            mesh->morphs.resize(targetCount);
+            for (size_t i = 0; i < targetNames.size(); ++i) {
+                mesh->morphs[i].name = targetNames[i];
+            }
         }
 
         mesh->bbmin = glm::vec3(std::numeric_limits<float>::max());

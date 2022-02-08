@@ -254,14 +254,26 @@ namespace renderer
         bool unlit{ false };
     };
 
-    struct Vertex
+    struct Target
     {
-        glm::vec3 pos{};
-        glm::vec3 normal{};
-        glm::vec4 tangent{};
-        glm::vec2 uv{};
-        glm::vec4 jointIndices;
-        glm::vec4 jointWeights;
+        Target() = default;
+        Target &operator=(const Target &) = delete;
+
+        bool hasNormal() const
+        {
+            return normals.size() > 0;
+        }
+
+        bool hasTangent() const
+        {
+            return tangents.size() > 0;
+        }
+
+        std::string name;
+
+        std::vector<glm::vec3> vertices;
+        std::vector<glm::vec3> normals;
+        std::vector<glm::vec4> tangents;
     };
 
     class Primitive
@@ -272,39 +284,65 @@ namespace renderer
 
         Material *material{ nullptr };
 
-        glm::vec3 vert(const int iface, const int ivert) const
+        glm::vec3 vert(const uint32_t iface, const uint32_t ivert) const
         {
             return vertices[indices[iface * 3 + ivert]];
         }
 
-        glm::vec2 uv(const int iface, const int ivert) const
+        glm::vec2 uv(const uint32_t iface, const uint32_t ivert) const
         {
             return uvs[indices[iface * 3 + ivert]];
         }
 
-        glm::vec3 normal(const int iface, const int ivert) const
+        glm::vec3 normal(const uint32_t iface, const uint32_t ivert) const
         {
             return normals[indices[iface * 3 + ivert]];
         }
 
-        glm::vec4 tangent(const int iface, const int ivert) const
+        glm::vec4 tangent(const uint32_t iface, const uint32_t ivert) const
         {
             return tangents[indices[iface * 3 + ivert]];
         }
 
-        glm::vec4 color(const int iface, const int ivert) const
+        glm::vec4 color(const uint32_t iface, const uint32_t ivert) const
         {
             return colors[indices[iface * 3 + ivert]];
         }
 
-        glm::vec4 joint(const int iface, const int ivert) const
+        glm::vec4 joint(const uint32_t iface, const uint32_t ivert) const
         {
             return joints[indices[iface * 3 + ivert]];
         }
 
-        glm::vec4 weight(const int iface, const int ivert) const
+        glm::vec4 weight(const uint32_t iface, const uint32_t ivert) const
         {
             return weights[indices[iface * 3 + ivert]];
+        }
+
+        glm::vec3 vertAtTarget(const uint32_t iface, const uint32_t ivert, const uint32_t target) const
+        {
+            return targets.at(target).vertices[indices[iface * 3 + ivert]];
+        }
+
+        glm::vec3 normalAtTarget(const uint32_t iface, const uint32_t ivert, const uint32_t target) const
+        {
+            const auto &t = targets.at(target);
+            if (t.hasNormal())
+                return t.normals[indices[iface * 3 + ivert]];
+            return glm::vec3();
+        }
+
+        glm::vec4 tangentAtTarget(const uint32_t iface, const uint32_t ivert, const uint32_t target) const
+        {
+            const auto &t = targets.at(target);
+            if (t.hasTangent())
+                return t.tangents[indices[iface * 3 + ivert]];
+            return glm::vec4();
+        }
+
+        uint32_t numTargets() const
+        {
+            return targets.size();
         }
 
         uint32_t numFaces() const
@@ -347,9 +385,17 @@ namespace renderer
 
         std::vector<uint32_t> indices;
 
+        std::vector<Target> targets;
+
         glm::vec3 center;
         glm::vec3 bbmin;
         glm::vec3 bbmax;
+    };
+
+    struct Morph
+    {
+        std::string name;
+        float weight{ 0.f };
     };
 
     class Mesh
@@ -360,6 +406,8 @@ namespace renderer
 
         std::string name;
         std::vector<Primitive> primitives;
+
+        std::vector<Morph> morphs;
 
         glm::vec3 center;
         glm::vec3 bbmin;

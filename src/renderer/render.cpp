@@ -160,6 +160,8 @@ namespace renderer
             if (options.verbose && !node->name.empty())
                 std::cout << "[INFO] Rendering " << node->name << std::endl;
 
+            shader->morphs = &node->mesh->morphs;
+
             for (const auto &primitive : node->mesh->primitives) {
                 shader->primitive = &primitive;
                 const uint32_t num_faces = primitive.numFaces();

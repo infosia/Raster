@@ -21,5 +21,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 
+#include <json.hpp>
+
 #define USE_VRMC_VRM_0_0
 #include <VRM.h>
