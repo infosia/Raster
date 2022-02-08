@@ -508,7 +508,7 @@ namespace renderer
         return m;
     }
 
-    static void UpdateJoints(Node *node)
+    void update(Node *node)
     {
         node->bindMatrix = getNodeMatrix(node);
         if (node->skin) {
@@ -521,7 +521,7 @@ namespace renderer
         }
 
         for (auto child : node->children) {
-            UpdateJoints(child);
+            update(child);
         }
     }
 
@@ -832,7 +832,7 @@ namespace renderer
 
         // Update joint matrix
         for (const auto node : scene.children) {
-            UpdateJoints(node);
+            update(node);
         }
 
         // VRM 0.0
