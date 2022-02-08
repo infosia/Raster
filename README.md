@@ -29,10 +29,18 @@ A software renderer which does not require any GPU resources. Works without Vulk
 
 ### Options
 
-* `--verbose`: Verbose log output
 * `--input`: Input file name
 * `--output` Output file name
-* `--config`: Configuration file (JSON)
+* `--verbose`: Verbose log output
+* `--silent`: Silent log output
+* `--ssaa`: Enable SSAA (Anti-Alias)
+* `--outline`: Enable outline (Inverted Hull)
+
+## Renderng Samples
+
+<img src="examples/001.png" width="256"> <img src="examples/002.png" width="256">
+<img src="examples/003.png" width="256"> <img src="examples/004.png" width="256">
+
 
 ## Usage (As a library)
 
