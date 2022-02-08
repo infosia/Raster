@@ -18,7 +18,10 @@ A software renderer which does not require any GPU resources. Works without Vulk
 - [x] Blinn-Phong reflection
 - [x] Vertex colors
 - [x] SSAA (anti-alias)
-- [ ] Morph targets
+- [x] Morph targets
+- [x] Lit, Unlit
+- [x] Outline lighting mix (MToon)
+- [x] Outline width mask (MToon)
 - [ ] MToon shading
 
 ## Usage (Standalone renderer)
