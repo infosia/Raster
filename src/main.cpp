@@ -81,8 +81,8 @@ int main(int argc, char **argv)
 
     // Output image size
     // Bigger number means longer rendering time & more memory consumption
-    options.width = 1024;
-    options.height = 1024;
+    options.width = 512;
+    options.height = 512;
 
     // Model rotation
     const fs::path inputPath = input;
@@ -112,11 +112,34 @@ int main(int argc, char **argv)
     }
 
     //
-    // Move camera position to center of the scene (x & y axis), and far enough (body height * 2.5) from the bounding box (z-axis)
+    // Node transformation
+    //
+    /*
+    for (auto& node : scene.allNodes) {
+        if (node.name == "J_Bip_L_UpperArm") {
+            node.matrix *= glm::toMat4(glm::quat(-0.924, 0, 0, 0.383));
+            update(&node);
+        } else if (node.name == "J_Bip_R_UpperArm") {
+            node.matrix *= glm::toMat4(glm::quat(0.924, 0, 0, 0.383));
+            update(&node);
+        }
+    }
+
+    // Morph weight
+    for (auto &mesh : scene.meshes) {
+        if (mesh.morphs.size() > 4) {
+            auto morph = &mesh.morphs.at(4);
+            morph->weight = 1.f;
+        }
+    }
+    */
+
+    //
+    // Move camera position to center of the scene (x & y axis), and far enough (body height * 2.5) from the bounding box (z axis)
     // This differs among models and needs to be adjusted depending on the model forms.
     //
-    options.camera.translation = glm::vec3(scene.center.x, scene.center.y, -(scene.bbmax.y * 2.5f));
-    //options.camera.translation = glm::vec3(0.f, 1.f, -4.5f);
+    //options.camera.translation = glm::vec3(0.f, 1.4f, 5.f);
+    options.camera.translation = glm::vec3(scene.center.x, scene.center.y, (scene.bbmax.y * 2.0f));
     //options.camera.rotation = glm::quatLookAt(glm::normalize(glm::vec3(0.f, .5f, 1.f) - glm::vec3(0.f, 0.f, 0.f)), glm::vec3(0.f, 1.f, 0.f));
 
     Image outputImage;

@@ -94,7 +94,9 @@ namespace renderer
 
     inline glm::mat4 getViewMatrix(const Camera &camera)
     {
-        return glm::translate(-camera.translation) * glm::toMat4(camera.rotation) * glm::scale(camera.scale);
+        glm::vec3 translation = -camera.translation;
+        translation.z = -translation.z; // Z+
+        return glm::translate(translation) * glm::toMat4(camera.rotation) * glm::scale(camera.scale);
     }
 
     inline glm::mat4 getProjectionMatrix(uint32_t width, uint32_t height, float fov, float near, float far)
