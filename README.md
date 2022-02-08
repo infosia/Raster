@@ -38,9 +38,11 @@ A software renderer which does not require any GPU resources. Works without Vulk
 
 ## Renderng Samples
 
+### Ready Player Me (Lit with outline & morph)
 <img src="examples/001.png" width="256"> <img src="examples/002.png" width="256">
-<img src="examples/003.png" width="256"> <img src="examples/004.png" width="256">
 
+### VRoid (Unlit with outline & morph)
+<img src="examples/003.png" width="256"> <img src="examples/004.png" width="256">
 
 ## Usage (As a library)
 
