@@ -493,7 +493,7 @@ namespace renderer
     static glm::mat4 getNodeMatrix(const Node *node)
     {
         auto m = node->matrix;
-        auto *parent = node->parent;
+        auto parent = node->parent;
 
         // Avoid potential infinite loop
         // I think 64 nest is already too much
@@ -508,7 +508,7 @@ namespace renderer
         return m;
     }
 
-    void update(Node *node)
+    static void update(Node *node)
     {
         node->bindMatrix = getNodeMatrix(node);
         if (node->skin) {
@@ -517,11 +517,19 @@ namespace renderer
             const auto numJoints = skin->joints.size();
             for (size_t i = 0; i < numJoints; ++i) {
                 skin->jointMatrices[i] = getNodeMatrix(skin->joints[i]) * skin->inverseBindMatrices[i];
+                skin->jointMatrices[i] = inverseTransform * skin->jointMatrices[i];
             }
         }
 
         for (auto child : node->children) {
             update(child);
+        }
+    }
+
+    void update(Scene& scene) 
+    {
+       for (const auto node : scene.children) {
+            update(node);
         }
     }
 
@@ -646,7 +654,7 @@ namespace renderer
             node->matrix = glm::make_mat4x4(cnode->matrix);
         }
 
-        // Skin references will be updated from UpdateSkin
+        // Skin references will be updated from update()
         // But wanted to make sure skin reference is set even when there's no joint references to it
         if (cnode->skin) {
             node->skin = &scene->skins.at(cnode->skin - cdata->skins);
@@ -831,9 +839,7 @@ namespace renderer
         }
 
         // Update joint matrix
-        for (const auto node : scene.children) {
-            update(node);
-        }
+        update(scene);
 
         // VRM 0.0
         LoadVRM0(data, scene);

@@ -155,8 +155,8 @@ namespace renderer
     {
         if (node->skin)
             shader->jointMatrices = node->skin->jointMatrices.data();
-        else
-            shader->bindMatrix = node->bindMatrix;
+
+        shader->bindMatrix = node->bindMatrix;
 
         if (node->mesh) {
             if (options.verbose && !node->name.empty())

@@ -33,7 +33,8 @@ namespace renderer
     // Save scene to PNG
     bool save(std::string filename, Image &framebuffer);
 
-    // Update joint matrix which is used for skinning.
-    // Call this when you change joint matrix (translation, rotation, scale)
-    void update(Node *node);
+    // Update node matrices in the scene that is used for skinning.
+    // Call this when you change node matrix (translation, rotation, scale)
+    void update(Scene &scene);
+
 }
