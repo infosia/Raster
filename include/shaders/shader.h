@@ -52,10 +52,14 @@ namespace renderer
 
     struct Shader
     {
+        Shader() = default;
+        Shader(const Shader &) = delete;
+        Shader &operator=(const Shader &) = delete;
+
         const Primitive *primitive{ nullptr };
         const glm::mat4 *jointMatrices{ nullptr };
         const std::vector<Morph> *morphs{ nullptr };
-        glm::mat4 bindMatrix{};
+        glm::mat4 *bindMatrix{};
 
         Image framebuffer{};
         std::vector<float> zbuffer;
@@ -70,9 +74,9 @@ namespace renderer
                 const auto inJointIndices = primitive->joint(iface, ivert);
                 const auto inJointWeights = primitive->weight(iface, ivert);
                 skinMat = inJointWeights.x * jointMatrices[int(inJointIndices.x)] + inJointWeights.y * jointMatrices[int(inJointIndices.y)] + inJointWeights.z * jointMatrices[int(inJointIndices.z)] + inJointWeights.w * jointMatrices[int(inJointIndices.w)];
-                skinMat = bindMatrix * skinMat;
+                skinMat = *bindMatrix * skinMat;
             } else {
-                skinMat = bindMatrix;
+                skinMat = *bindMatrix;
             }
             return skinMat;
         }
@@ -121,6 +125,9 @@ namespace renderer
 
     struct OutlineShader : Shader
     {
+        OutlineShader(const OutlineShader &) = delete;
+        OutlineShader &operator=(const OutlineShader &) = delete;
+
         glm::mat3x3 vNormal;
         glm::mat3x2 vUV;
 
@@ -195,6 +202,9 @@ namespace renderer
 
     struct DefaultShader : Shader
     {
+        DefaultShader(const DefaultShader &) = delete;
+        DefaultShader &operator=(const DefaultShader &) = delete;
+
         glm::mat4x3 vColor;
         glm::mat3x3 vPosition;
         glm::mat3x3 vNormal;

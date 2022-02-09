@@ -526,9 +526,9 @@ namespace renderer
         }
     }
 
-    void update(Scene& scene) 
+    void update(Scene &scene)
     {
-       for (const auto node : scene.children) {
+        for (const auto node : scene.children) {
             update(node);
         }
     }

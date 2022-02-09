@@ -114,7 +114,7 @@ int main(int argc, char **argv)
     //
     // Node transformation
     //
-    for (auto& node : scene.allNodes) {
+    for (auto &node : scene.allNodes) {
         if (node.name == "J_Bip_L_UpperArm" || node.name == "mixamorig:LeftArm") {
             node.matrix *= glm::toMat4(glm::quat(-0.924, 0, 0, 0.383));
         } else if (node.name == "J_Bip_R_UpperArm" || node.name == "mixamorig:RightArm") {

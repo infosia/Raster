@@ -151,12 +151,12 @@ namespace renderer
         }
     }
 
-    static void draw(const RenderOptions &options, Shader *shader, ShaderContext &ctx, const Node *node)
+    static void draw(const RenderOptions &options, Shader *shader, ShaderContext &ctx, Node *node)
     {
         if (node->skin)
             shader->jointMatrices = node->skin->jointMatrices.data();
 
-        shader->bindMatrix = node->bindMatrix;
+        shader->bindMatrix = &node->bindMatrix;
 
         if (node->mesh) {
             if (options.verbose && !node->name.empty())

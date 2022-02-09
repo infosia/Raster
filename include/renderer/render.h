@@ -36,5 +36,4 @@ namespace renderer
     // Update node matrices in the scene that is used for skinning.
     // Call this when you change node matrix (translation, rotation, scale)
     void update(Scene &scene);
-
 }
