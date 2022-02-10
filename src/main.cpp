@@ -97,7 +97,7 @@ static void parseRendering(const nlohmann::json &rendering, Scene &scene)
         } else if (key == "lights" && value.is_array()) {
             for (const auto iter : value) {
                 if (iter.is_object()) {
-                    Light light {};
+                    Light light{};
 
                     auto props = iter.items();
                     for (const auto prop : props) {
@@ -211,12 +211,19 @@ int main(int argc, char **argv)
     options.width = 512;
     options.height = 512;
 
+    // Model rotation
+    const fs::path inputPath = input;
+    const auto extension = inputPath.extension().string();
+    if (extension == ".vrm") {
+        options.model.rotation = glm::quat(-0.259, 0, 0.966, 0);
+    } else {
+        options.model.rotation = glm::quat(0.966, 0, 0.259, 0);
+    }
+
     //
     // Config JSON - See examples/raster-config.json for details.
     // Default settings will be overridden when specified in config JSON
     //
-    const fs::path inputPath = input;
-    const auto extension = inputPath.extension().string();
     if (!config.empty()) {
         nlohmann::json configJson;
         if (json_parse(config, &configJson, options.silent)) {
