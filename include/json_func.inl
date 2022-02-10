@@ -20,36 +20,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <vector>
-#include <string>
 
-static bool json_get_bool(nlohmann::json object, std::string name)
+static bool json_get_float(nlohmann::json value, float *number)
 {
-    if (object.is_object()) {
-        auto& value = object[name];
-        if (value.is_boolean()) {
-            return value.get<bool>();
-        }
+    if (value.is_number()) {
+        *number = value.get<float>();
+        return true;
     }
     return false;
-}
-
-static std::vector<std::string> json_get_string_items(std::string name, nlohmann::json obj)
-{
-    const auto& items_obj = obj[name];
-    std::vector<std::string> items;
-    if (items_obj.is_array()) {
-        for (const auto& item : items_obj) {
-            items.push_back(item.get<std::string>());
-        }
-    }
-    return items;
 }
 
 static bool json_parse(std::string json_file, nlohmann::json *json, bool silent)
 {
     std::ifstream f(json_file, std::ios::in);
     if (f.fail()) {
+        std::cout << "[ERROR] Unable to find " << json_file << std::endl;
         return false;
     }
 
@@ -64,4 +49,43 @@ static bool json_parse(std::string json_file, nlohmann::json *json, bool silent)
     }
 
     return true;
+}
+
+static bool parseVec3(const nlohmann::json &value, glm::vec3 *vec)
+{
+    const uint8_t SIZE = 3;
+
+    if (value.size() < SIZE)
+        return false;
+
+    glm::vec3 out;
+    for (size_t i = 0; i < SIZE; ++i) {
+        const auto v = value[i];
+        if (!v.is_number())
+            return false;
+        out[i] = v.get<float>();
+    }
+    *vec = out;
+
+    return true;
+}
+
+static bool parseQuat(const nlohmann::json &value, glm::quat *quat)
+{
+    const uint8_t SIZE = 4;
+
+    if (value.size() < SIZE)
+        return false;
+
+    const auto x = value[0];
+    const auto y = value[1];
+    const auto z = value[2];
+    const auto w = value[3];
+
+    if (x.is_number() && y.is_number() && z.is_number() && w.is_number()) {
+        *quat = glm::quat(w.get<float>(), x.get<float>(), y.get<float>(), z.get<float>());
+        return true;
+    }
+
+    return false;
 }

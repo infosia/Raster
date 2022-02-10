@@ -32,6 +32,133 @@ namespace fs = ghc::filesystem;
 
 using namespace renderer;
 
+static bool parseColor(const nlohmann::json &value, Color *color)
+{
+    const uint8_t SIZE = 4;
+
+    if (value.size() < SIZE)
+        return false;
+
+    uint8_t c[SIZE];
+    for (size_t i = 0; i < SIZE; ++i) {
+        const auto v = value[i];
+        if (!v.is_number())
+            return false;
+
+        c[i] = uint8_t(v.get<float>() * 255.f);
+    }
+
+    memcpy(color->buffer(), c, SIZE);
+
+    return true;
+}
+
+static void parseRendering(const nlohmann::json &rendering, Scene &scene)
+{
+    if (!rendering.is_object())
+        return;
+
+    auto &options = scene.options;
+
+    auto items = rendering.items();
+    for (const auto &item : items) {
+        auto key = item.key();
+        auto value = item.value();
+
+        if (key == "width" && value.is_number()) {
+            options.width = value.get<uint32_t>();
+        } else if (key == "height" && value.is_number()) {
+            options.height = value.get<uint32_t>();
+        } else if (key == "outline" && value.is_boolean()) {
+            options.outline = value.get<bool>();
+        } else if (key == "SSAA" && value.is_boolean()) {
+            options.ssaa = value.get<bool>();
+        } else if (key == "bgColor" && value.is_array()) {
+            if (!parseColor(value, &options.background)) {
+                std::cout << "[ERROR] Unable to parse " << key << std::endl;
+            }
+        } else if (key == "camera" && value.is_object()) {
+            auto camera = value.items();
+            for (const auto iter : camera) {
+                auto cKey = iter.key();
+                auto cValue = iter.value();
+                if (cKey == "fov") {
+                    json_get_float(cValue, &options.camera.fov);
+                } else if (cKey == "znear") {
+                    json_get_float(cValue, &options.camera.znear);
+                } else if (cKey == "zfar") {
+                    json_get_float(cValue, &options.camera.zfar);
+                } else if (cKey == "translation") {
+                    parseVec3(cValue, &options.camera.translation);
+                } else if (cKey == "rotation") {
+                    parseQuat(cValue, &options.camera.rotation);
+                }
+            }
+        } else if (key == "lights" && value.is_array()) {
+            for (const auto iter : value) {
+                if (iter.is_object()) {
+                    Light light {};
+
+                    auto props = iter.items();
+                    for (const auto prop : props) {
+                        auto lKey = prop.key();
+                        if (lKey == "position") {
+                            parseVec3(prop.value(), &light.position);
+                        } else if (lKey == "color") {
+                            parseColor(prop.value(), &light.color);
+                        }
+                    }
+
+                    scene.lights.push_back(light);
+                }
+            }
+
+            if (scene.lights.size() > 0) {
+                scene.light = &scene.lights.at(0);
+            }
+        } else if (key == "model" && value.is_object()) {
+            auto model = value.items();
+            for (const auto iter : model) {
+                auto mKey = iter.key();
+                auto mValue = iter.value();
+                if (mKey == "translation") {
+                    parseVec3(mValue, &options.model.translation);
+                } else if (mKey == "rotation") {
+                    parseQuat(mValue, &options.model.rotation);
+                }
+            }
+        }
+    }
+}
+
+static void parseConfig(nlohmann::json &json, Scene &scene, std::string extension)
+{
+    std::transform(extension.begin(), extension.end(), extension.begin(), ::toupper);
+
+    // rendering settings
+    const auto rendering = json["rendering"];
+
+    if (!rendering.is_object()) {
+        if (!scene.options.silent)
+            std::cout << "[ERROR] Unable to parse 'rendering' configuration" << std::endl;
+        return;
+    }
+
+    // Common rendering settings
+    parseRendering(rendering["common"], scene);
+
+    // Extension-specific settings
+    auto items = rendering.items();
+    for (const auto &item : items) {
+        auto key = "." + item.key();
+        auto value = item.value();
+        std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+        if (key == extension) {
+            parseRendering(value, scene);
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     CLI::App app{ "Raster: Software rasterizer for glTF models" };
@@ -84,25 +211,19 @@ int main(int argc, char **argv)
     options.width = 512;
     options.height = 512;
 
-    // Model rotation
+    //
+    // Config JSON - See examples/raster-config.json for details.
+    // Default settings will be overridden when specified in config JSON
+    //
     const fs::path inputPath = input;
-    if (inputPath.extension() == ".vrm") {
-        options.model.rotation = glm::quat(-0.259, 0, 0.966, 0);
-    } else {
-        options.model.rotation = glm::quat(0.966, 0, 0.259, 0);
-    }
-
-    // Light color (used by reflection)
-    scene.light->color = Color(206, 74, 0, 255);
-
-    //
-    // Config JSON
-    //
+    const auto extension = inputPath.extension().string();
     if (!config.empty()) {
         nlohmann::json configJson;
         if (json_parse(config, &configJson, options.silent)) {
-            // TODO
+            parseConfig(configJson, scene, extension);
         } else {
+            if (!options.silent)
+                std::cout << "[ERRRO] Unable to parse " << config << std::endl;
             return 1;
         }
     }
@@ -115,10 +236,10 @@ int main(int argc, char **argv)
     // Node transformation
     //
     for (auto &node : scene.allNodes) {
-        if (node.name == "J_Bip_L_UpperArm" || node.name == "mixamorig:LeftArm") {
-            node.matrix *= glm::toMat4(glm::quat(-0.924, 0, 0, 0.383));
-        } else if (node.name == "J_Bip_R_UpperArm" || node.name == "mixamorig:RightArm") {
+        if (node.name == "J_Bip_L_UpperArm" || node.name == "mixamorig:LeftArm" || node.name == "LeftArm") {
             node.matrix *= glm::toMat4(glm::quat(0.924, 0, 0, 0.383));
+        } else if (node.name == "J_Bip_R_UpperArm" || node.name == "mixamorig:RightArm" || node.name == "RightArm") {
+            node.matrix *= glm::toMat4(glm::quat(-0.924, 0, 0, 0.383));
         }
     }
 
@@ -137,8 +258,8 @@ int main(int argc, char **argv)
     // Move camera position to center of the scene (x & y axis), and far enough (body height * 2.5) from the bounding box (z axis)
     // This differs among models and needs to be adjusted depending on the model forms.
     //
-    options.camera.translation = glm::vec3(0.f, 1.2f, 1.9f);
-    //options.camera.translation = glm::vec3(0.f, 1.4f, 5.f);
+    options.camera.translation = glm::vec3(0.f, 1.f, 4.f);
+    //options.camera.translation = glm::vec3(0.f, 1.0f, 15.f);
     //options.camera.translation = glm::vec3(scene.center.x, scene.center.y, (scene.bbmax.y * 2.0f));
     //options.camera.rotation = glm::quatLookAt(glm::normalize(glm::vec3(0.f, .5f, 1.f) - glm::vec3(0.f, 0.f, 0.f)), glm::vec3(0.f, 1.f, 0.f));
 

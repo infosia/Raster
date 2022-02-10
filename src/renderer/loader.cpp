@@ -843,6 +843,12 @@ namespace renderer
         // VRM 0.0
         LoadVRM0(data, scene);
 
+        // if no lights assigned, push default one
+        if (scene.lights.size() == 0) {
+            scene.lights.push_back(Light());
+            scene.light = &scene.lights.at(0);
+        }
+
         if (scene.options.verbose) {
             const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
             std::cout << "done in " << msec << " msec" << std::endl;

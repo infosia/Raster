@@ -507,11 +507,7 @@ namespace renderer
     class Scene
     {
     public:
-        Scene()
-        {
-            lights.push_back(Light());
-            light = &lights.at(0);
-        };
+        Scene() = default;
         Scene(const Scene &) = delete;
         Scene &operator=(const Scene &) = delete;
 

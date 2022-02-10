@@ -1,0 +1,37 @@
+{
+  "rendering": {
+    "common":{
+      "width":1048,
+      "height":1048,
+      "outline":true,
+      "SSAA":true,
+      "bgColor":[1.0, 1.0, 1.0, 1.0],
+      "camera":{
+        "fov": 30.0,
+        "translation":[0, 1.3, 0.7],
+        "rotation":[0, 1, 0, 0]
+      },
+      "lights":[
+        {
+          "position":[0.0, 1.5, 1],
+          "color":[1.0, 0.34, 0.12, 1.0]
+        }
+      ]
+    },
+    "GLB":{
+      "model":{
+        "translation":[0, 0, 0],
+        "rotation":[0, 0.259, 0, 0.966]
+      }
+    },
+    "VRM":{
+      "model":{
+        "translation":[0, 0, 0],
+        "rotation":[0, 0.966, 0, -0.259]
+      }
+    }
+  },
+  "poses": {
+
+  }
+}
