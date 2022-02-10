@@ -268,7 +268,7 @@ namespace renderer
             const auto inTangent = vTangent * glm::vec4(bar, 1.f);
             const auto inPosition = vPosition * bar;
             const auto lightDir = glm::normalize(light->position - inPosition);
-            const auto viewDir = glm::normalize(ctx.camera.translation - inPosition);
+            const auto viewDir = glm::normalize(inPosition - ctx.camera.translation);
             const auto halfDir = glm::normalize(lightDir - viewDir);
             const auto inColor = vColor * glm::vec4(bar, 1.f);
 
@@ -322,7 +322,7 @@ namespace renderer
                     //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
 
                     const auto shadingFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
-                    auto specularColor = light->color * specular * material->specularFactor * (material->metallicFactor - material->roughnessFactor);
+                    auto specularColor = light->color * specular * material->specularFactor;
 
                     if (shadingFactor > 0) {
                         Color newColor(color * shadingFactor + specularColor, color.A());
