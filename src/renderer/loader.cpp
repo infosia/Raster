@@ -512,12 +512,11 @@ namespace renderer
     {
         node->bindMatrix = getNodeMatrix(node);
         if (node->skin) {
-            const auto inverseTransform = glm::inverse(node->bindMatrix);
             const auto skin = node->skin;
             const auto numJoints = skin->joints.size();
             for (size_t i = 0; i < numJoints; ++i) {
                 skin->jointMatrices[i] = getNodeMatrix(skin->joints[i]) * skin->inverseBindMatrices[i];
-                skin->jointMatrices[i] = inverseTransform * skin->jointMatrices[i];
+                skin->jointMatrices[i] = skin->jointMatrices[i];
             }
         }
 

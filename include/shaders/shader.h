@@ -74,7 +74,6 @@ namespace renderer
                 const auto inJointIndices = primitive->joint(iface, ivert);
                 const auto inJointWeights = primitive->weight(iface, ivert);
                 skinMat = inJointWeights.x * jointMatrices[int(inJointIndices.x)] + inJointWeights.y * jointMatrices[int(inJointIndices.y)] + inJointWeights.z * jointMatrices[int(inJointIndices.z)] + inJointWeights.w * jointMatrices[int(inJointIndices.w)];
-                skinMat = *bindMatrix * skinMat;
             } else {
                 skinMat = *bindMatrix;
             }

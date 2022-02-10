@@ -442,7 +442,7 @@ namespace renderer
         bool visible{ true };
 
         // Used when skinning is disabled. This multiplies all matrices from parent.
-        // Updated by UpdateJoints() in loader.cpp
+        // Updated by update() in loader.cpp
         glm::mat4 bindMatrix{};
     };
 
