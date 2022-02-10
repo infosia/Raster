@@ -322,7 +322,7 @@ namespace renderer
                     //specular = std::pow(std::fmax(glm::dot(reflect(L, N), viewDir), 0.f), shininess);
 
                     const auto shadingFactor = std::fmin(1.f, std::fmax(glm::dot(N, L), ctx.maxShadingFactor));
-                    auto specularColor = light->color * specular * material->specularFactor;
+                    auto specularColor = light->color * specular * material->specularFactor * (material->metallicFactor - material->roughnessFactor);
 
                     if (shadingFactor > 0) {
                         Color newColor(color * shadingFactor + specularColor, color.A());
