@@ -806,10 +806,14 @@ namespace renderer
             LoadTexture(data, &data->textures[i], &scene, &scene.textures.at(i), &scene.images.at(i));
         }
 
+        Observable::notifyProgress(0.5f);
+
         scene.materials.resize(data->materials_count);
         for (cgltf_size i = 0; i < data->materials_count; ++i) {
             LoadMaterial(data, &data->materials[i], &scene, &scene.materials.at(i));
         }
+
+        Observable::notifyProgress(0.6f);
 
         scene.bbmin = glm::vec3(std::numeric_limits<float>::max());
         scene.bbmax = glm::vec3(std::numeric_limits<float>::min());
@@ -822,11 +826,15 @@ namespace renderer
         }
         scene.center = (scene.bbmin + scene.bbmax) / 2.f;
 
+        Observable::notifyProgress(0.7f);
+
         scene.skins.resize(data->skins_count);
         scene.allNodes.resize(data->nodes_count);
         for (cgltf_size i = 0; i < data->nodes_count; ++i) {
             LoadNode(data, &data->nodes[i], &scene, &scene.allNodes.at(i));
         }
+
+        Observable::notifyProgress(0.8f);
 
         // Update node hierarchy in the scene
         for (cgltf_size i = 0; data->scene && i < data->scene->nodes_count; ++i) {
@@ -843,6 +851,8 @@ namespace renderer
         // Update joint matrix
         update(scene);
 
+        Observable::notifyProgress(0.9f);
+
         // VRM 0.0
         LoadVRM0(data, scene);
 
@@ -857,11 +867,15 @@ namespace renderer
             Observable::notifyMessage(SubjectType::Info, "Loading done in " + std::to_string(msec) + " msec");
         }
 
+        Observable::notifyProgress(0.99f);
+
         return true;
     }
 
     bool loadGLTF(std::string filename, Scene &scene)
     {
+        Observable::notifyProgress(0.f);
+
         cgltf_options gltf_options = {};
         cgltf_data *data = {};
 
@@ -874,6 +888,7 @@ namespace renderer
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
                 Observable::notifyMessage(SubjectType::Error, "Failed to parse " + filename);
+            Observable::notifyProgress(1.0f);
             return false;
         }
 
@@ -881,6 +896,7 @@ namespace renderer
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
                 Observable::notifyMessage(SubjectType::Error, "Failed to load buffers from " + filename);
+            Observable::notifyProgress(1.0f);
             return false;
         }
 
@@ -888,12 +904,17 @@ namespace renderer
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
                 Observable::notifyMessage(SubjectType::Error, "Failed to validate " + filename);
+            Observable::notifyProgress(1.0f);
             return false;
         }
+
+        Observable::notifyProgress(0.1f);
 
         LoadScene(data, scene);
 
         cgltf_free(data);
+
+        Observable::notifyProgress(1.0f);
 
         return true;
     }

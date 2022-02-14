@@ -194,6 +194,8 @@ namespace renderer
 
     bool render(Scene &scene, Image &framebuffer)
     {
+        Observable::notifyProgress(0.0f);
+
         const auto start = std::chrono::system_clock::now();
 
         ShaderContext ctx;
@@ -226,6 +228,7 @@ namespace renderer
         if (options.outline) {
             shaders.push_back(&outline);
         }
+        Observable::notifyProgress(0.1f);
 
 #pragma omp parallel for
         for (int i = 0; i < shaders.size(); ++i) {
@@ -238,6 +241,7 @@ namespace renderer
                 draw(options, shader, ctx, node);
             }
         }
+        Observable::notifyProgress(0.7f);
 
         auto dst = framebuffer.buffer();
         const auto stride = options.format;
@@ -265,9 +269,12 @@ namespace renderer
                 }
             }
         }
+        Observable::notifyProgress(0.8f);
 
         // Fill the background anywhere pixel alpha equals zero
         framebuffer.fill(ctx.bgColor);
+
+        Observable::notifyProgress(0.9f);
 
         if (options.ssaa) {
             if (options.verbose)
@@ -283,6 +290,8 @@ namespace renderer
             const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
             Observable::notifyMessage(SubjectType::Info, "Rendering done in " + std::to_string(msec) + " msec");
         }
+
+        Observable::notifyProgress(1.f);
 
         return true;
     }

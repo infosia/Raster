@@ -60,6 +60,7 @@ public:
 
     virtual void progress(float progress)
     {
+        std::cout << "[INFO] Progress " << (progress * 100.f) << "%" << std::endl;
     }
 };
 
