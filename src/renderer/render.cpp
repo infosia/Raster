@@ -23,6 +23,7 @@
 
 #include "renderer/render.h"
 #include "pch.h"
+#include "observer.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -160,7 +161,7 @@ namespace renderer
 
         if (node->mesh) {
             if (options.verbose && !node->name.empty())
-                std::cout << "[INFO] Rendering " << node->name << std::endl;
+                Observable::notifyMessage(SubjectType::Info, "Rendering " + node->name);
 
             shader->morphs = &node->mesh->morphs;
 
@@ -270,7 +271,7 @@ namespace renderer
 
         if (options.ssaa) {
             if (options.verbose)
-                std::cout << "[INFO] Generating SSAA" << std::endl;
+                Observable::notifyMessage(SubjectType::Info, "Generating SSAA");
 
             Image tmp(options.width, options.height, options.format);
             generateSSAA(&tmp, &framebuffer, options.ssaaKernelSize);
@@ -280,7 +281,7 @@ namespace renderer
 
         if (options.verbose) {
             const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
-            std::cout << "[INFO] Rendering done in " << msec << " msec" << std::endl;
+            Observable::notifyMessage(SubjectType::Info, "Rendering done in " + std::to_string(msec) + " msec");
         }
 
         return true;

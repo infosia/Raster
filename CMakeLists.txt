@@ -4,11 +4,12 @@ project(Raster)
 
 set(EXE_NAME Raster)
 
-option(RASTER_BUILD_EXE "Build Raster executable" ON)
+option(RASTER_BUILD_EXECUTABLE "Build the project as an executable, rather than a library." ON)
 
 find_package(OpenMP)
 
 set(HEADER_FILES
+  include/observer.h
   include/json_func.inl
   include/renderer/render.h
   include/renderer/loader.h
@@ -36,7 +37,7 @@ set (BUILD_INCLUDES
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extern/mikktspace)
 
-if(RASTER_BUILD_EXE)
+if(RASTER_BUILD_EXECUTABLE)
   add_executable(${EXE_NAME} ${SRC_FILES} ${HEADER_FILES} src/main.cpp)
 else()
   add_library(${PROJECT_NAME} ${SRC_FILES} ${HEADER_FILES})

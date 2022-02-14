@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <set>
 #include <sstream>
 #include <string>

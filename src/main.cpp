@@ -32,6 +32,37 @@ namespace fs = ghc::filesystem;
 
 using namespace renderer;
 
+class Observer : public IObserver
+{
+public:
+    virtual void message(SubjectType subject, std::string message)
+    {
+
+        std::cout << "[";
+        switch (subject) {
+        case SubjectType::Error:
+            std::cout << "ERROR";
+            break;
+        case SubjectType::Warning:
+            std::cout << "WARN";
+            break;
+        case SubjectType::Progress:
+            std::cout << "PROGRESS";
+            break;
+        default:
+            std::cout << "INFO";
+            break;
+        }
+        std::cout << "] ";
+
+        std::cout << message << std::endl;
+    }
+
+    virtual void progress(float progress)
+    {
+    }
+};
+
 static bool parseColor(const nlohmann::json &value, Color *color)
 {
     const uint8_t SIZE = 4;
@@ -75,7 +106,7 @@ static void parseRendering(const nlohmann::json &rendering, Scene &scene)
             options.ssaa = value.get<bool>();
         } else if (key == "bgColor" && value.is_array()) {
             if (!parseColor(value, &options.background)) {
-                std::cout << "[ERROR] Unable to parse " << key << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "Unable to parse " + key);
             }
         } else if (key == "camera" && value.is_object()) {
             auto camera = value.items();
@@ -140,7 +171,7 @@ static void parseConfig(nlohmann::json &json, Scene &scene, std::string extensio
 
     if (!rendering.is_object()) {
         if (!scene.options.silent)
-            std::cout << "[ERROR] Unable to parse 'rendering' configuration" << std::endl;
+            Observable::notifyMessage(SubjectType::Error, "Unable to parse 'rendering' configuration");
         return;
     }
 
@@ -186,6 +217,9 @@ int main(int argc, char **argv)
 
     CLI11_PARSE(app, argc, argv);
 
+    Observer observer;
+    Observable::subscribe(&observer);
+
     Scene scene;
 
     RenderOptions &options = scene.options;
@@ -230,7 +264,7 @@ int main(int argc, char **argv)
             parseConfig(configJson, scene, extension);
         } else {
             if (!options.silent)
-                std::cout << "[ERRRO] Unable to parse " << config << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "Unable to parse " + config);
             return 1;
         }
     }

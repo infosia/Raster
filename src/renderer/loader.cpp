@@ -22,6 +22,7 @@
  */
 
 #include "pch.h"
+#include "observer.h"
 #include "renderer/loader.h"
 #include "renderer/scene.h"
 
@@ -38,6 +39,8 @@
 
 namespace renderer
 {
+    std::list<IObserver *> Observable::observers;
+
     typedef struct smikktspace_data_t
     {
         cgltf_size vertex_count;
@@ -129,7 +132,7 @@ namespace renderer
 
         if (data->scene == nullptr) {
             if (!options.silent)
-                std::cout << "[ERROR] No scene found in glTF. Nothing to render." << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "No scene found in glTF. Nothing to render");
             return cgltf_result_invalid_gltf;
         }
 
@@ -137,7 +140,7 @@ namespace renderer
             std::set<cgltf_node *> parents;
             if (!CheckNodeHierarchy(data->scene->nodes[i], parents)) {
                 if (!options.silent)
-                    std::cout << "[ERROR] Invaid node hierarchy found in glTF." << std::endl;
+                    Observable::notifyMessage(SubjectType::Error, "Invaid node hierarchy found in glTF");
                 return cgltf_result_invalid_gltf;
             }
         }
@@ -242,7 +245,7 @@ namespace renderer
         const auto indices = cprim->indices;
         if (indices == nullptr || indices->count == 0) {
             if (!scene->options.silent)
-                std::cout << "[ERROR] primitive indice should not be null" << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "Primitive indice should not be null");
             return;
         }
 
@@ -276,7 +279,7 @@ namespace renderer
 
         if (acc_POS == nullptr || acc_POS->count == 0) {
             if (!scene->options.silent)
-                std::cout << "[ERROR] primitive vertices should not be null" << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "Primitive vertices should not be null");
             return;
         }
 
@@ -794,7 +797,7 @@ namespace renderer
         const auto start = std::chrono::system_clock::now();
 
         if (scene.options.verbose)
-            std::cout << "[INFO] Loading scene...";
+            Observable::notifyMessage(SubjectType::Info, "Loading scene...");
 
         scene.images.resize(data->textures_count);
         scene.textures.resize(data->textures_count);
@@ -851,7 +854,7 @@ namespace renderer
 
         if (scene.options.verbose) {
             const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
-            std::cout << "done in " << msec << " msec" << std::endl;
+            Observable::notifyMessage(SubjectType::Info, "Loading done in " + std::to_string(msec) + " msec");
         }
 
         return true;
@@ -870,21 +873,21 @@ namespace renderer
         auto result = cgltf_parse_file(&gltf_options, filename.c_str(), &data);
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
-                std::cout << "[ERROR] Failed to parse " << filename << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "Failed to parse " + filename);
             return false;
         }
 
         result = cgltf_load_buffers(&gltf_options, data, filename.c_str());
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
-                std::cout << "[ERROR] Failed to load buffers from " << filename << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "Failed to load buffers from " + filename);
             return false;
         }
 
         result = ValidateGLTF(data, scene.options);
         if (result != cgltf_result_success) {
             if (!scene.options.silent)
-                std::cout << "[ERROR] Failed to validate " << filename << std::endl;
+                Observable::notifyMessage(SubjectType::Error, "Failed to validate " + filename);
             return false;
         }
 
