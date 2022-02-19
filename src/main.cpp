@@ -216,6 +216,9 @@ int main(int argc, char **argv)
     bool enableOutline = false;
     app.add_flag("-l,--outline", enableOutline, "Enable outline");
 
+    bool enableVignette = false;
+    app.add_flag("-g,--vignette", enableVignette, "Enable vignette effect");
+
     CLI11_PARSE(app, argc, argv);
 
     Observer observer;
@@ -240,6 +243,9 @@ int main(int argc, char **argv)
     // Enable outline
     // This will likely double rendering time
     options.outline = enableOutline;
+
+    // Enable vignette effect (dark corners)
+    options.vignette = enableVignette;
 
     // Output image size
     // Bigger number means longer rendering time & more memory consumption

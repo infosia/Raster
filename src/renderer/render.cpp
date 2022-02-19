@@ -34,6 +34,32 @@
 
 namespace renderer
 {
+    static void generateVignette(Image *dst, const Color bgColor)
+    {
+        const auto R = bgColor.R();
+        const auto B = bgColor.B();
+        const auto G = bgColor.G();
+
+        const auto width = dst->width;
+        const auto height = dst->height;
+
+        for (uint32_t x = 0; x < width; ++x) {
+            for (uint32_t y = 0; y < height; ++y) {
+
+                const auto srcColor = dst->get(x, y);
+
+                // Stop filling when pixel is already painted
+                if (srcColor.A() != 0)
+                    continue;
+
+                const float distance = sqrtf(powf((x - width / 2.f), 2) + powf((y - height / 2.f), 2));
+                const float factor = (height - distance) / height;
+
+                Color newColor = Color(R * factor, G * factor, B * factor, 255);
+                dst->set(x, y, newColor);
+            }
+        }
+    }
 
     static void generateSSAA(Image *dst, const Image *src, uint8_t kernelSize = 2)
     {
@@ -271,8 +297,15 @@ namespace renderer
         }
         Observable::notifyProgress(0.8f);
 
-        // Fill the background anywhere pixel alpha equals zero
-        framebuffer.fill(ctx.bgColor);
+        if (options.vignette) {
+            if (options.verbose)
+                Observable::notifyMessage(SubjectType::Info, "Generating Vignette");
+
+            generateVignette(&framebuffer, ctx.bgColor);
+        } else {
+            // Fill the background anywhere pixel alpha equals zero
+            framebuffer.fill(ctx.bgColor);
+        }
 
         Observable::notifyProgress(0.9f);
 

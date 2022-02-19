@@ -476,6 +476,7 @@ namespace renderer
         bool verbose{ false };
         bool ssaa{ false };
         bool outline{ false };
+        bool vignette{ false };
 
         std::string input;
 
