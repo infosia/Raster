@@ -5,8 +5,9 @@
       "height":1048,
       "outline":true,
       "SSAA":true,
-      "bgColor":[1.0, 1.0, 1.0, 1.0],
+      "bgColor":[1.0, 0.0, 0.0, 1.0],
       "camera":{
+        "projection": "perspective",
         "fov": 30.0,
         "translation":[0, 1.3, 0.7],
         "rotation":[0, 1, 0, 0]

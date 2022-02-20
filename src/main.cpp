@@ -124,6 +124,8 @@ static void parseRendering(const nlohmann::json &rendering, Scene &scene)
                     parseVec3(cValue, &options.camera.translation);
                 } else if (cKey == "rotation") {
                     parseQuat(cValue, &options.camera.rotation);
+                } else if (cKey == "projection") {
+                    options.camera.mode = cValue.get<std::string>() == "orthographic" ? Projection::Orthographic : Projection::Perspective;
                 }
             }
         } else if (key == "lights" && value.is_array()) {

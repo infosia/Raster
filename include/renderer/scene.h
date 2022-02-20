@@ -453,6 +453,11 @@ namespace renderer
         glm::vec3 scale{ 1.f, 1.f, 1.f };
     };
 
+    enum class Projection {
+        Perspective,
+        Orthographic
+    };
+
     struct Camera
     {
         float fov{ 30.f };
@@ -462,6 +467,8 @@ namespace renderer
         glm::vec3 translation{ 0.f, 1.f, -2.f };
         glm::quat rotation{ 0.f, 0.f, 1.f, 0.f };
         glm::vec3 scale{ 1.f, 1.f, 1.f };
+
+        Projection mode{ Projection::Perspective };
     };
 
     struct Light

@@ -126,9 +126,23 @@ namespace renderer
         return glm::translate(translation) * glm::toMat4(camera.rotation) * glm::scale(camera.scale);
     }
 
-    inline glm::mat4 getProjectionMatrix(uint32_t width, uint32_t height, float fov, float near, float far)
+    inline glm::mat4 getOrthoMatrix(float width, float height, float near, float far)
     {
-        return glm::perspectiveFov(glm::radians(fov), (float)width, (float)height, near, far);
+        const float aspect = width / height;
+        return glm::ortho(aspect, -aspect, 1.f, -1.f, -1.f, 1.f);
+    }
+
+    inline glm::mat4 getPerspectiveMatrix(float width, float height, float fov, float near, float far)
+    {
+        return glm::perspectiveFov(glm::radians(fov), width, height, near, far);
+    }
+
+    inline glm::mat4 getProjectionMatrix(uint32_t width, uint32_t height, Camera camera)
+    {
+        if (camera.mode == Projection::Orthographic) {
+            return getOrthoMatrix((float)width, (float)height, camera.znear, camera.zfar);
+        }
+        return getPerspectiveMatrix((float)width, (float)height, camera.fov, camera.znear, camera.zfar);
     }
 
     inline glm::uvec4 bb(const glm::vec3 tri[3], const int width, const int height)
@@ -233,7 +247,7 @@ namespace renderer
 
         Camera &camera = options.camera;
 
-        ctx.projection = getProjectionMatrix(width, height, camera.fov, camera.znear, camera.zfar);
+        ctx.projection = getProjectionMatrix(width, height, camera);
         ctx.view = getViewMatrix(camera);
         ctx.model = getModelMatrix(options.model);
         ctx.bgColor = options.background;
