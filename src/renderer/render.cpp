@@ -129,7 +129,7 @@ namespace renderer
     inline glm::mat4 getOrthoMatrix(float width, float height, float near, float far)
     {
         const float aspect = width / height;
-        return glm::ortho(aspect, -aspect, 1.f, -1.f, -1.f, 1.f);
+        return glm::ortho(aspect, -aspect, 1.f, -1.f, near, far);
     }
 
     inline glm::mat4 getPerspectiveMatrix(float width, float height, float fov, float near, float far)
