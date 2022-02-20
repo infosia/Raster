@@ -22,6 +22,7 @@ A software renderer which does not require any GPU resources. Works without Vulk
 - [x] Lit, Unlit
 - [x] Outline lighting mix (MToon)
 - [x] Outline width mask (MToon)
+- [x] Vignette effect
 - [ ] MToon shading
 
 ## Usage (Standalone renderer)
@@ -38,11 +39,17 @@ A software renderer which does not require any GPU resources. Works without Vulk
 * `--silent`: Silent log output
 * `--ssaa`: Enable SSAA (Anti-Alias)
 * `--outline`: Enable outline (Inverted Hull)
+* `--vignette`: Enable vignette effect
 
 ## Renderng Samples
 
-### Ready Player Me (Lit with outline & morph)
+### Ready Player Me
+
+#### Lit with outline & morph
 <img src="examples/001.png" width="256"> <img src="examples/002.png" width="256">
+
+### Lit with outline & morph & vignette
+<img src="examples/005.png" width="256"> <img src="examples/006.png" width="256">
 
 ### VRoid (Unlit with outline & morph)
 <img src="examples/003.png" width="256"> <img src="examples/004.png" width="256">
