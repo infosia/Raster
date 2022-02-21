@@ -246,6 +246,11 @@ namespace renderer
             material->specularFactor = cmat->specular.specular_factor;
         }
 
+        if (cmat->emissive_texture.texture != nullptr) {
+            material->emissiveFactor = glm::make_vec3(cmat->emissive_factor);
+            material->emissiveTexture = &scene->textures.at(cmat->emissive_texture.texture - data->textures);
+        }
+
         material->doubleSided = cmat->double_sided;
         material->alphaMode = getAlphaMode(cmat->alpha_mode);
         material->alphaCutOff = cmat->alpha_cutoff;

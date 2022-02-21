@@ -116,6 +116,12 @@ namespace renderer
         {
         }
 
+        Color(const glm::vec4 &colors /* 0.f - 1.f */)
+        {
+            for (int i = 0; i < Image::Format::RGBA; i++)
+                rgba[i] = colors[i] * 255.f;
+        }
+
         Color(const Color &src, const uint8_t A)
             : rgba{ src.R(), src.G(), src.B(), A }
         {
@@ -181,6 +187,11 @@ namespace renderer
             rgba[3] = 255;
         }
 
+        void transparent()
+        {
+            rgba[3] = 0;
+        }
+
         Color operator*(const float intensity) const
         {
             Color res = *this;
@@ -203,6 +214,14 @@ namespace renderer
             Color res = *this;
             for (int i = 0; i < 4; i++)
                 res.rgba[i] = rgba[i] + (colors[i] * 255.f);
+            return res;
+        }
+
+        Color operator*(const glm::vec3 colors /* 0.f - 1.f */) const
+        {
+            Color res = *this;
+            for (int i = 0; i < 3; i++)
+                res.rgba[i] = rgba[i] * colors[i];
             return res;
         }
 
@@ -252,8 +271,10 @@ namespace renderer
     {
         glm::vec4 baseColorFactor{};
         glm::vec4 baseColorFactor_sRGB{};
+        glm::vec3 emissiveFactor{};
         Texture *baseColorTexture{ nullptr };
         Texture *normalTexture{ nullptr };
+        Texture *emissiveTexture{ nullptr };
         AlphaMode alphaMode{ AlphaMode::Opaque };
         float alphaCutOff{ 0.f };
         float specularFactor{ 1.f };

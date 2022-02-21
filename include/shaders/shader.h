@@ -265,10 +265,10 @@ namespace renderer
             return glm::clamp(uv, glm::vec2(clampX, clampY), glm::vec2(1.f - clampX, 1.f - clampY));
         }
 
-        inline glm::vec2 wrap(const glm::vec2 &uv)
+        inline glm::vec2 wrap(const glm::vec2 &uv, const Texture *texture)
         {
-            const auto wrapS = primitive->material->baseColorTexture->wrapS;
-            const auto wrapT = primitive->material->baseColorTexture->wrapT;
+            const auto wrapS = texture->wrapS;
+            const auto wrapT = texture->wrapT;
 
             // In case S and T wrappings are same
             if (wrapS == wrapT) {
@@ -323,10 +323,19 @@ namespace renderer
                 if (!material->doubleSided && backfacing)
                     return true;
 
+                if (material->emissiveTexture && material->emissiveTexture->image) {
+                    const auto texture = material->emissiveTexture->image;
+                    const auto wrappedUV = wrap(UV, material->emissiveTexture);
+                    auto emissiveColor = texture->get(wrappedUV.x * texture->width, wrappedUV.y * texture->height);
+                    emissiveColor.transparent(); // Remove alpha influence
+
+                    Color newColor = color + (emissiveColor * material->emissiveFactor);
+                    color.copy(newColor);
+                }
+
                 if (material->baseColorTexture && material->baseColorTexture->image) {
                     const auto texture = material->baseColorTexture->image;
-                    const auto wrappedUV = wrap(UV);
-
+                    const auto wrappedUV = wrap(UV, material->baseColorTexture);
                     auto diffuse = texture->get(wrappedUV.x * texture->width, wrappedUV.y * texture->height);
 
                     if (material->alphaMode != AlphaMode::Opaque && texture->format == Image::Format::RGBA && diffuse.A() == 0)
@@ -343,6 +352,10 @@ namespace renderer
                     Color newColor = color + material->baseColorFactor_sRGB;
                     color.copy(newColor);
                 }
+
+                // alpha-cutoff
+                if (material->alphaMode == AlphaMode::Mask && color.Af() < material->alphaCutOff)
+                    return true;
 
                 if (!material->unlit) {
                     auto N = glm::normalize(inNormal);
@@ -375,12 +388,9 @@ namespace renderer
                         color.copy(newColor);
                     }
                 }
-
-                // alpha-cutoff
-                if (material->alphaMode == AlphaMode::Mask && color.Af() < material->alphaCutOff)
-                    return true;
             }
 
+            // vertex color
             if (primitive->hasColor()) {
                 Color newColor = color * glm::vec4(inColor, 1.f);
                 color.copy(newColor);
