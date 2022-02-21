@@ -148,6 +148,30 @@ namespace renderer
         return cgltf_result_success;
     }
 
+    inline WrapMode getWrapMode(cgltf_int value)
+    {
+        switch (value) {
+        case WrapMode::CLAMP_TO_EDGE:
+            return WrapMode::CLAMP_TO_EDGE;
+        case WrapMode::MIRRORED_REPEAT:
+            return WrapMode::MIRRORED_REPEAT;
+        case WrapMode::REPEAT:
+            return WrapMode::REPEAT;
+        }
+        return WrapMode::REPEAT;
+    }
+
+    static bool LoadSampler(cgltf_texture *ctexture, Texture *texture)
+    {
+        if (ctexture->sampler == nullptr)
+            return false;
+
+        texture->wrapS = getWrapMode(ctexture->sampler->wrap_s);
+        texture->wrapT = getWrapMode(ctexture->sampler->wrap_t);
+
+        return true;
+    }
+
     static bool LoadTexture(cgltf_data *data, cgltf_texture *ctexture, Scene *scene, Texture *texture, Image *image)
     {
         assert(texture->image == nullptr);
@@ -177,6 +201,8 @@ namespace renderer
         texture->image->init(w, h, (Image::Format)n, image_data);
 
         stbi_image_free(image_data);
+
+        LoadSampler(ctexture, texture);
 
         return true;
     }

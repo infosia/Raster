@@ -219,6 +219,12 @@ namespace renderer
         uint8_t rgba[4]{ 0, 0, 0, 255 };
     };
 
+    enum WrapMode {
+        CLAMP_TO_EDGE = 33071,
+        MIRRORED_REPEAT = 33648,
+        REPEAT = 10497
+    };
+
     class Texture
     {
     public:
@@ -231,6 +237,9 @@ namespace renderer
         Image *image;
         std::string name;
         std::string mimeType;
+
+        WrapMode wrapS{ WrapMode::REPEAT };
+        WrapMode wrapT{ WrapMode::REPEAT };
     };
 
     enum class AlphaMode {

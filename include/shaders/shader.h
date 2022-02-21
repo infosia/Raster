@@ -257,9 +257,53 @@ namespace renderer
             return glm::vec4(gl_Position, 1.f);
         }
 
+        inline glm::vec2 clampToEdge(const glm::vec2 &uv)
+        {
+            const float clampX = 1.f / (2 * primitive->material->baseColorTexture->image->width);
+            const float clampY = 1.f / (2 * primitive->material->baseColorTexture->image->height);
+
+            return glm::clamp(uv, glm::vec2(clampX, clampY), glm::vec2(1.f - clampX, 1.f - clampY));
+        }
+
+        inline glm::vec2 wrap(const glm::vec2 &uv)
+        {
+            const auto wrapS = primitive->material->baseColorTexture->wrapS;
+            const auto wrapT = primitive->material->baseColorTexture->wrapT;
+
+            // In case S and T wrappings are same
+            if (wrapS == wrapT) {
+                if (wrapS == WrapMode::CLAMP_TO_EDGE) {
+                    return clampToEdge(uv);
+                } else if (wrapS == WrapMode::MIRRORED_REPEAT) {
+                    return glm::mirrorRepeat(uv);
+                }
+                return glm::repeat(uv);
+            }
+
+            // Bit tedious but needed to process S and T separately
+            glm::vec2 ret = uv;
+            if (wrapS == WrapMode::CLAMP_TO_EDGE) {
+                ret.x = clampToEdge(uv).x;
+            } else if (wrapS == WrapMode::MIRRORED_REPEAT) {
+                ret.x = glm::mirrorRepeat(uv).x;
+            } else if (wrapS == WrapMode::REPEAT) {
+                ret.x = glm::repeat(uv).x;
+            }
+
+            if (wrapT == WrapMode::CLAMP_TO_EDGE) {
+                ret.y = clampToEdge(uv).y;
+            } else if (wrapT == WrapMode::MIRRORED_REPEAT) {
+                ret.y = glm::mirrorRepeat(uv).y;
+            } else if (wrapT == WrapMode::REPEAT) {
+                ret.y = glm::repeat(uv).y;
+            }
+
+            return ret;
+        }
+
         virtual bool fragment(const ShaderContext &ctx, const glm::vec3 bar, bool backfacing, Color &color) override
         {
-            const auto UV = glm::repeat(vUV * bar);
+            const auto UV = vUV * bar;
 
             // This shader uses single light only
             const auto light = ctx.light;
@@ -279,9 +323,11 @@ namespace renderer
                 if (!material->doubleSided && backfacing)
                     return true;
 
-                if (material->baseColorTexture) {
+                if (material->baseColorTexture && material->baseColorTexture->image) {
                     const auto texture = material->baseColorTexture->image;
-                    auto diffuse = texture->get(UV.x * texture->width, UV.y * texture->height);
+                    const auto wrappedUV = wrap(UV);
+
+                    auto diffuse = texture->get(wrappedUV.x * texture->width, wrappedUV.y * texture->height);
 
                     if (material->alphaMode != AlphaMode::Opaque && texture->format == Image::Format::RGBA && diffuse.A() == 0)
                         return true;
@@ -290,7 +336,7 @@ namespace renderer
                         diffuse.opeque();
                     }
 
-                    Color newColor = color + diffuse;
+                    Color newColor = color + diffuse * material->baseColorFactor;
                     color.copy(newColor);
                 } else {
                     // base color (gamma corrected)

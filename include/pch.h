@@ -14,6 +14,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_SILENT_WARNINGS
+#include <glm/ext/vector_common.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/color_space.hpp>
 #include <glm/gtc/matrix_access.hpp>
@@ -21,7 +22,6 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
-#include <glm/ext/vector_common.hpp>
 
 #include <json.hpp>
 
