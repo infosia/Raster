@@ -114,7 +114,7 @@ namespace renderer
         Color(const std::uint8_t *p, const Image::Format bpp)
         {
             if (bpp == Image::Format::GRAYSCALE) {
-                memset(rgba, *p, bpp);
+                memset(rgba, *p, Image::Format::RGB);
             } else if (bpp == Image::Format::GRAYSCALE_ALPHA) {
                 memset(rgba, *p, Image::Format::RGB);
                 rgba[3] = p[1];
