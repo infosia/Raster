@@ -336,7 +336,7 @@ namespace renderer
                         diffuse.opeque();
                     }
 
-                    Color newColor = color + diffuse * material->baseColorFactor;
+                    Color newColor = color + diffuse * material->baseColorFactor_sRGB;
                     color.copy(newColor);
                 } else {
                     // base color (gamma corrected)
