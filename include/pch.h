@@ -21,6 +21,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/ext/vector_common.hpp>
 
 #include <json.hpp>
 

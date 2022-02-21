@@ -259,7 +259,7 @@ namespace renderer
 
         virtual bool fragment(const ShaderContext &ctx, const glm::vec3 bar, bool backfacing, Color &color) override
         {
-            const auto UV = vUV * bar;
+            const auto UV = glm::repeat(vUV * bar);
 
             // This shader uses single light only
             const auto light = ctx.light;
