@@ -338,24 +338,24 @@ namespace renderer
                     const auto wrappedUV = wrap(UV, material->baseColorTexture);
                     auto diffuse = texture->get(wrappedUV.x * texture->width, wrappedUV.y * texture->height);
 
-                    if (material->alphaMode != AlphaMode::Opaque && texture->format == Image::Format::RGBA && diffuse.A() == 0)
+                    if (material->alphaMode != AlphaMode::Opaque && texture->hasAlpha() && diffuse.A() == 0)
+                        return true;
+
+                    // alpha-cutoff
+                    if (material->alphaMode == AlphaMode::Mask && texture->hasAlpha() && diffuse.Af() < material->alphaCutOff)
                         return true;
 
                     if (material->alphaMode == AlphaMode::Opaque) {
                         diffuse.opeque();
                     }
 
-                    Color newColor = color + diffuse * material->baseColorFactor_sRGB;
+                    Color newColor = color + (diffuse * material->baseColorFactor_sRGB);
                     color.copy(newColor);
                 } else {
                     // base color (gamma corrected)
                     Color newColor = color + material->baseColorFactor_sRGB;
                     color.copy(newColor);
                 }
-
-                // alpha-cutoff
-                if (material->alphaMode == AlphaMode::Mask && color.Af() < material->alphaCutOff)
-                    return true;
 
                 if (!material->unlit) {
                     auto N = glm::normalize(inNormal);

@@ -33,6 +33,7 @@ namespace renderer
     public:
         enum Format {
             GRAYSCALE = 1,
+            GRAYSCALE_ALPHA = 2,
             RGB = 3,
             RGBA = 4
         };
@@ -86,6 +87,11 @@ namespace renderer
             memcpy(data.data(), src.buffer(), (width * height * (uint8_t)format));
         }
 
+        bool hasAlpha()
+        {
+            return format == RGBA || format == GRAYSCALE_ALPHA;
+        }
+
         void set(uint32_t x, uint32_t y, Color &color);
         Color get(uint32_t x, uint32_t y) const;
 
@@ -107,8 +113,15 @@ namespace renderer
 
         Color(const std::uint8_t *p, const Image::Format bpp)
         {
-            for (int i = 0; i < bpp && i < Image::Format::RGBA; i++)
-                rgba[i] = p[i];
+            if (bpp == Image::Format::GRAYSCALE) {
+                memset(rgba, *p, bpp);
+            } else if (bpp == Image::Format::GRAYSCALE_ALPHA) {
+                memset(rgba, *p, Image::Format::RGB);
+                rgba[3] = p[1];
+            } else if (bpp == Image::Format::RGB || bpp == Image::Format::RGBA) {
+                for (int i = 0; i < bpp && i < Image::Format::RGBA; i++)
+                    rgba[i] = p[i];
+            }
         }
 
         Color(const uint8_t R, const uint8_t G, const uint8_t B, const uint8_t A)
