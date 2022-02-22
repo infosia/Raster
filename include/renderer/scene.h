@@ -545,6 +545,7 @@ namespace renderer
 
     struct VRM0Material
     {
+        uint8_t outlineWidthMode{ 0 };
         float outlineWidth{ 0.f };
         float outlineLightingMix{ 1.f };
         Color outlineColor{ 0, 0, 0, 255 };

@@ -153,7 +153,14 @@ namespace renderer
                 vNormal[ivert] = normal * glm::mat3(ctx.model * skinMat);
 
                 if (primitive->material && primitive->material->vrm0) {
-                    outlineWidth = primitive->material->vrm0->outlineWidth;
+                    const auto vrm0 = primitive->material->vrm0;
+                    if (vrm0->outlineWidthMode == 0) {
+                        outlineWidth = 0.f;
+                    } else if (vrm0->outlineWidthMode == 2) {
+                        outlineWidth = std::min(0.1f, vrm0->outlineWidth);
+                    } else {
+                        outlineWidth = vrm0->outlineWidth;
+                    }
                 }
 
                 const auto outlineOffset = glm::normalize(normal) * 0.01f * outlineWidth;

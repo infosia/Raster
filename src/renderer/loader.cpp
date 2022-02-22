@@ -803,6 +803,8 @@ namespace renderer
                 if (pkey == "_OutlineWidth") {
                     vrm0mat->hasOutlineWidth = true;
                     vrm0mat->outlineWidth = pvalue;
+                } else if (pkey == "_OutlineWidthMode") {
+                    vrm0mat->outlineWidthMode = (uint8_t)pvalue;
                 } else if (pkey == "_OutlineLightingMix") {
                     vrm0mat->hasOutlineLightingMix = true;
                     vrm0mat->outlineLightingMix = pvalue;
