@@ -31,6 +31,8 @@
 #include <stb_image_write.h>
 
 #include <chrono>
+#include <map>
+#include <sstream>
 
 namespace renderer
 {
@@ -192,6 +194,74 @@ namespace renderer
         }
     }
 
+    struct RenderOp
+    {
+        RenderOptions *options;
+        Shader *shader;
+        ShaderContext &ctx;
+        Node *node;
+        Primitive *primitive;
+    };
+
+    static void queue(RenderOptions &options, Shader *shader, ShaderContext &ctx, Node *node, std::map<uint32_t, std::vector<RenderOp>> *renderQueue)
+    {
+        if (node->mesh) {
+            for (auto &primitive : node->mesh->primitives) {
+                RenderOp op{ &options, shader, ctx, node, &primitive };
+                if (primitive.material && primitive.material->vrm0) {
+                    const auto vrm0 = primitive.material->vrm0;
+                    const auto iter = renderQueue->find(vrm0->renderQueue);
+                    if (iter == renderQueue->end()) {
+                        std::vector<RenderOp> queue{ op };
+                        renderQueue->emplace(vrm0->renderQueue, queue);
+                    } else {
+                        iter->second.push_back(op);
+                    }
+                } else {
+                    const auto iter = renderQueue->find(0);
+                    if (iter == renderQueue->end()) {
+                        std::vector<RenderOp> queue{ op };
+                        renderQueue->emplace(0, queue);
+                    } else {
+                        iter->second.push_back(op);
+                    }
+                }
+            }
+        }
+
+        for (const auto child : node->children) {
+            queue(options, shader, ctx, child, renderQueue);
+        }
+    }
+
+    static void draw(RenderOp *op)
+    {
+        const auto node = op->node;
+        const auto shader = op->shader;
+
+        if (node->skin)
+            shader->jointMatrices = node->skin->jointMatrices.data();
+        else
+            shader->bindMatrix = &node->bindMatrix;
+
+        if (node->mesh) {
+            shader->morphs = &node->mesh->morphs;
+            shader->primitive = op->primitive;
+            const uint32_t num_faces = op->primitive->numFaces();
+            for (uint32_t i = 0; i < num_faces; i++) {
+                glm::vec3 tri[3] = {
+                    shader->vertex(op->ctx, i, 0),
+                    shader->vertex(op->ctx, i, 1),
+                    shader->vertex(op->ctx, i, 2),
+                };
+                const glm::vec3 depths(tri[0].z, tri[1].z, tri[2].z);
+                if (isInTriangle(tri, shader->framebuffer.width, shader->framebuffer.height)) {
+                    drawBB(shader, op->ctx, bb(tri, shader->framebuffer.width, shader->framebuffer.height), tri, depths);
+                }
+            }
+        }
+    }
+
     static void draw(const RenderOptions &options, Shader *shader, ShaderContext &ctx, Node *node)
     {
         if (node->skin)
@@ -267,6 +337,9 @@ namespace renderer
         }
         Observable::notifyProgress(0.1f);
 
+        std::vector<std::map<uint32_t, std::vector<RenderOp>>> renderQueues;
+        renderQueues.resize(shaders.size());
+
 #pragma omp parallel for
         for (int i = 0; i < shaders.size(); ++i) {
             const auto shader = shaders.at(i);
@@ -275,9 +348,26 @@ namespace renderer
             shader->framebuffer.reset(width, height, options.format);
 
             for (auto node : scene.children) {
-                draw(options, shader, ctx, node);
+                queue(options, shader, ctx, node, &renderQueues.at(i));
             }
         }
+        Observable::notifyProgress(0.2f);
+
+#pragma omp parallel for
+        for (int i = 0; i < shaders.size(); ++i) {
+            const auto shader = shaders.at(i);
+            auto &renderQueue = renderQueues.at(i);
+            for (auto &queue : renderQueue) {
+                std::stringstream ss;
+                ss << "RenderQueue " << queue.first;
+                Observable::notifyMessage(SubjectType::Info, ss.str());
+                auto &ops = queue.second;
+                for (auto &op : ops) {
+                    draw(&op);
+                }
+            }
+        }
+
         Observable::notifyProgress(0.7f);
 
         auto dst = framebuffer.buffer();

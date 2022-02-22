@@ -797,6 +797,8 @@ namespace renderer
 
             scene.materials.at(i).vrm0 = vrm0mat;
 
+            vrm0mat->renderQueue = cmat->renderQueue;
+
             for (const auto &p : cmat->floatProperties) {
                 const auto pkey = p.first;
                 const auto pvalue = p.second;
