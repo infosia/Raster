@@ -280,6 +280,7 @@ namespace renderer
         Mask
     };
 
+    struct VRM0Material;
     struct Material
     {
         glm::vec4 baseColorFactor{};
@@ -295,6 +296,8 @@ namespace renderer
         float roughnessFactor{ 0.f };
         bool doubleSided{ false };
         bool unlit{ false };
+
+        VRM0Material *vrm0{ nullptr };
     };
 
     struct Target
@@ -522,8 +525,6 @@ namespace renderer
 
     struct RenderOptions
     {
-        bool silent{ false };
-        bool verbose{ false };
         bool ssaa{ false };
         bool outline{ false };
         bool vignette{ false };
@@ -542,7 +543,7 @@ namespace renderer
         Model model{};
     };
 
-    struct VRM0Properties
+    struct VRM0Material
     {
         float outlineWidth{ 0.f };
         float outlineLightingMix{ 1.f };
@@ -553,6 +554,11 @@ namespace renderer
         bool hasOutlineLightingMix{ false };
         bool hasOutlineColor{ false };
         bool hasOutlineWidthTexture{ false };
+    };
+
+    struct VRM0Properties
+    {
+        std::vector<VRM0Material> materials;
     };
 
     class Scene

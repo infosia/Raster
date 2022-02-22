@@ -131,16 +131,14 @@ namespace renderer
             return result;
 
         if (data->scene == nullptr) {
-            if (!options.silent)
-                Observable::notifyMessage(SubjectType::Error, "No scene found in glTF. Nothing to render");
+            Observable::notifyMessage(SubjectType::Error, "No scene found in glTF. Nothing to render");
             return cgltf_result_invalid_gltf;
         }
 
         for (cgltf_size i = 0; i < data->scene->nodes_count; ++i) {
             std::set<cgltf_node *> parents;
             if (!CheckNodeHierarchy(data->scene->nodes[i], parents)) {
-                if (!options.silent)
-                    Observable::notifyMessage(SubjectType::Error, "Invaid node hierarchy found in glTF");
+                Observable::notifyMessage(SubjectType::Error, "Invaid node hierarchy found in glTF");
                 return cgltf_result_invalid_gltf;
             }
         }
@@ -275,8 +273,7 @@ namespace renderer
 
         const auto indices = cprim->indices;
         if (indices == nullptr || indices->count == 0) {
-            if (!scene->options.silent)
-                Observable::notifyMessage(SubjectType::Error, "Primitive indice should not be null");
+            Observable::notifyMessage(SubjectType::Error, "Primitive indice should not be null");
             return;
         }
 
@@ -309,8 +306,7 @@ namespace renderer
         }
 
         if (acc_POS == nullptr || acc_POS->count == 0) {
-            if (!scene->options.silent)
-                Observable::notifyMessage(SubjectType::Error, "Primitive vertices should not be null");
+            Observable::notifyMessage(SubjectType::Error, "Primitive vertices should not be null");
             return;
         }
 
@@ -788,34 +784,44 @@ namespace renderer
         VRMC_VRM_0_0::Vrm vrm;
         VRMC_VRM_0_0::from_json(VRM0_OBJ, vrm);
 
-        auto vrm0 = &scene.vrm0;
+        if (vrm.materialProperties.size() != scene.materials.size()) {
+            Observable::notifyMessage(SubjectType::Warning, "VRM materials should match material count in glTF");
+            return false;
+        }
 
-        for (const auto &mat : vrm.materialProperties) {
-            for (const auto &p : mat.floatProperties) {
+        const auto materials = &scene.vrm0.materials;
+        materials->resize(vrm.materialProperties.size());
+        for (size_t i = 0; i < vrm.materialProperties.size(); ++i) {
+            auto cmat = &vrm.materialProperties[i];
+            auto vrm0mat = &materials->at(i);
+
+            scene.materials.at(i).vrm0 = vrm0mat;
+
+            for (const auto &p : cmat->floatProperties) {
                 const auto pkey = p.first;
                 const auto pvalue = p.second;
                 if (pkey == "_OutlineWidth") {
-                    vrm0->hasOutlineWidth = true;
-                    vrm0->outlineWidth = pvalue;
+                    vrm0mat->hasOutlineWidth = true;
+                    vrm0mat->outlineWidth = pvalue;
                 } else if (pkey == "_OutlineLightingMix") {
-                    vrm0->hasOutlineLightingMix = true;
-                    vrm0->outlineLightingMix = pvalue;
+                    vrm0mat->hasOutlineLightingMix = true;
+                    vrm0mat->outlineLightingMix = pvalue;
                 }
             }
-            for (const auto &p : mat.textureProperties) {
+            for (const auto &p : cmat->textureProperties) {
                 const auto pkey = p.first;
                 const auto pvalue = p.second;
                 if (pkey == "_OutlineWidthTexture" && pvalue < scene.textures.size()) {
-                    vrm0->hasOutlineWidthTexture = true;
-                    vrm0->outlineWidthTexture = &scene.images.at(pvalue);
+                    vrm0mat->hasOutlineWidthTexture = true;
+                    vrm0mat->outlineWidthTexture = &scene.images.at(pvalue);
                 }
             }
-            for (const auto &p : mat.vectorProperties) {
+            for (const auto &p : cmat->vectorProperties) {
                 const auto pkey = p.first;
                 const auto pvalue = p.second;
                 if (pkey == "_OutlineColor" && pvalue.size() == 4) {
-                    vrm0->hasOutlineColor = true;
-                    vrm0->outlineColor = Color(pvalue[0] * 255, pvalue[1] * 255, pvalue[2] * 255, pvalue[3] * 255);
+                    vrm0mat->hasOutlineColor = true;
+                    vrm0mat->outlineColor = Color(pvalue[0] * 255, pvalue[1] * 255, pvalue[2] * 255, pvalue[3] * 255);
                 }
             }
         }
@@ -827,8 +833,7 @@ namespace renderer
     {
         const auto start = std::chrono::system_clock::now();
 
-        if (scene.options.verbose)
-            Observable::notifyMessage(SubjectType::Info, "Loading scene...");
+        Observable::notifyMessage(SubjectType::Info, "Loading scene...");
 
         scene.images.resize(data->textures_count);
         scene.textures.resize(data->textures_count);
@@ -893,11 +898,8 @@ namespace renderer
             scene.light = &scene.lights.at(0);
         }
 
-        if (scene.options.verbose) {
-            const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
-            Observable::notifyMessage(SubjectType::Info, "Loading done in " + std::to_string(msec) + " msec");
-        }
-
+        const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+        Observable::notifyMessage(SubjectType::Info, "Loading done in " + std::to_string(msec) + " msec");
         Observable::notifyProgress(0.99f);
 
         return true;
@@ -917,24 +919,21 @@ namespace renderer
 
         auto result = cgltf_parse_file(&gltf_options, filename.c_str(), &data);
         if (result != cgltf_result_success) {
-            if (!scene.options.silent)
-                Observable::notifyMessage(SubjectType::Error, "Failed to parse " + filename);
+            Observable::notifyMessage(SubjectType::Error, "Failed to parse " + filename);
             Observable::notifyProgress(1.0f);
             return false;
         }
 
         result = cgltf_load_buffers(&gltf_options, data, filename.c_str());
         if (result != cgltf_result_success) {
-            if (!scene.options.silent)
-                Observable::notifyMessage(SubjectType::Error, "Failed to load buffers from " + filename);
+            Observable::notifyMessage(SubjectType::Error, "Failed to load buffers from " + filename);
             Observable::notifyProgress(1.0f);
             return false;
         }
 
         result = ValidateGLTF(data, scene.options);
         if (result != cgltf_result_success) {
-            if (!scene.options.silent)
-                Observable::notifyMessage(SubjectType::Error, "Failed to validate " + filename);
+            Observable::notifyMessage(SubjectType::Error, "Failed to validate " + filename);
             Observable::notifyProgress(1.0f);
             return false;
         }

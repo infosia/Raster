@@ -30,21 +30,18 @@ static bool json_get_float(nlohmann::json value, float *number)
     return false;
 }
 
-static bool json_parse(std::string json_file, nlohmann::json *json, bool silent)
+static bool json_parse(std::string json_file, nlohmann::json *json)
 {
     std::ifstream f(json_file, std::ios::in);
     if (f.fail()) {
-        std::cout << "[ERROR] Unable to find " << json_file << std::endl;
+        Observable::notifyMessage(SubjectType::Error, "Unable to find " + json_file);
         return false;
     }
 
     try {
         f >> *json;
     } catch (nlohmann::json::parse_error &e) {
-        if (!silent) {
-            std::cout << "[ERROR] Unable to parse " << json_file << std::endl;
-            std::cout << "        " << e.what() << std::endl;
-        }
+        Observable::notifyMessage(SubjectType::Error, "Unable to parse " + json_file + "\n\t" + e.what());
         return false;
     }
 

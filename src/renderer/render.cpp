@@ -200,8 +200,7 @@ namespace renderer
             shader->bindMatrix = &node->bindMatrix;
 
         if (node->mesh) {
-            if (options.verbose && !node->name.empty())
-                Observable::notifyMessage(SubjectType::Info, "Rendering " + node->name);
+            Observable::notifyMessage(SubjectType::Info, "Rendering " + node->name);
 
             shader->morphs = &node->mesh->morphs;
 
@@ -253,8 +252,6 @@ namespace renderer
         ctx.bgColor = options.background;
         ctx.camera = camera;
         ctx.light = scene.light;
-
-        ctx.vrm0 = &scene.vrm0;
 
         auto zbuffer = std::vector<float>(width * height, std::numeric_limits<float>::min());
 
@@ -312,9 +309,7 @@ namespace renderer
         Observable::notifyProgress(0.8f);
 
         if (options.vignette) {
-            if (options.verbose)
-                Observable::notifyMessage(SubjectType::Info, "Generating Vignette");
-
+            Observable::notifyMessage(SubjectType::Info, "Generating Vignette");
             generateVignette(&framebuffer, ctx.bgColor);
         } else {
             // Fill the background anywhere pixel alpha equals zero
@@ -324,8 +319,7 @@ namespace renderer
         Observable::notifyProgress(0.9f);
 
         if (options.ssaa) {
-            if (options.verbose)
-                Observable::notifyMessage(SubjectType::Info, "Generating SSAA");
+            Observable::notifyMessage(SubjectType::Info, "Generating SSAA");
 
             Image tmp(options.width, options.height, options.format);
             generateSSAA(&tmp, &framebuffer, options.ssaaKernelSize);
@@ -333,11 +327,8 @@ namespace renderer
             framebuffer.copy(tmp);
         }
 
-        if (options.verbose) {
-            const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
-            Observable::notifyMessage(SubjectType::Info, "Rendering done in " + std::to_string(msec) + " msec");
-        }
-
+        const auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+        Observable::notifyMessage(SubjectType::Info, "Rendering done in " + std::to_string(msec) + " msec");
         Observable::notifyProgress(1.f);
 
         return true;

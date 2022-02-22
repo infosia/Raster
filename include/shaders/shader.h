@@ -46,8 +46,6 @@ namespace renderer
 
         // Max limit of shading color changes
         float maxShadingFactor = 0.8f;
-
-        VRM0Properties *vrm0{ nullptr };
     };
 
     struct Shader
@@ -154,8 +152,9 @@ namespace renderer
 
                 vNormal[ivert] = normal * glm::mat3(ctx.model * skinMat);
 
-                if (ctx.vrm0 && ctx.vrm0->hasOutlineWidth)
-                    outlineWidth = ctx.vrm0->outlineWidth;
+                if (primitive->material && primitive->material->vrm0) {
+                    outlineWidth = primitive->material->vrm0->outlineWidth;
+                }
 
                 const auto outlineOffset = glm::normalize(normal) * 0.01f * outlineWidth;
                 vertex = vertex + outlineOffset;
@@ -178,16 +177,17 @@ namespace renderer
             float outlineWidthFactor = 1.f;
             float outlineLightingMix = 1.f;
 
-            if (ctx.vrm0) {
-                if (ctx.vrm0->hasOutlineColor)
-                    outlineColor = ctx.vrm0->outlineColor;
+            if (primitive->material && primitive->material->vrm0) {
+                const auto vrm0 = primitive->material->vrm0;
+                if (vrm0->hasOutlineColor)
+                    outlineColor = vrm0->outlineColor;
 
-                if (ctx.vrm0->hasOutlineLightingMix)
-                    outlineLightingMix = ctx.vrm0->outlineLightingMix;
+                if (vrm0->hasOutlineLightingMix)
+                    outlineLightingMix = vrm0->outlineLightingMix;
 
-                if (ctx.vrm0->hasOutlineWidthTexture && ctx.vrm0->outlineWidthTexture) {
+                if (vrm0->hasOutlineWidthTexture && vrm0->outlineWidthTexture) {
                     const auto UV = vUV * bar;
-                    const auto texture = ctx.vrm0->outlineWidthTexture;
+                    const auto texture = vrm0->outlineWidthTexture;
                     outlineWidthFactor = texture->get(UV.x * texture->width, UV.y * texture->height).Rf();
                 }
             }

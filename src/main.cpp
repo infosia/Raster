@@ -22,17 +22,29 @@
  */
 #include "raster.h"
 
+using namespace renderer;
+
 #include "json_func.inl"
 #include <CLI11.hpp>
 #include <ghc/filesystem.hpp>
 
-using namespace renderer;
-
 class Observer : public IObserver
 {
 public:
+    Observer(bool silent, bool verbose)
+        : IObserver()
+        , silent(silent)
+        , verbose(verbose)
+    {
+    }
+
     virtual void message(SubjectType subject, std::string message)
     {
+        if (silent)
+            return;
+
+        if (!verbose && subject != SubjectType::Error && subject != SubjectType::Warning)
+            return;
 
         std::cout << "[";
         switch (subject) {
@@ -43,7 +55,7 @@ public:
             std::cout << "WARN";
             break;
         case SubjectType::Progress:
-            std::cout << "PROGRESS";
+            std::cout << "INFO";
             break;
         default:
             std::cout << "INFO";
@@ -56,8 +68,15 @@ public:
 
     virtual void progress(float progress)
     {
+        if (silent || !verbose)
+            return;
+
         std::cout << "[INFO] Progress " << (progress * 100.f) << "%" << std::endl;
     }
+
+private:
+    bool verbose{ false };
+    bool silent{ false };
 };
 
 static bool parseColor(const nlohmann::json &value, Color *color)
@@ -171,8 +190,7 @@ static void parseConfig(nlohmann::json &json, Scene &scene, std::string extensio
     const auto rendering = json["rendering"];
 
     if (!rendering.is_object()) {
-        if (!scene.options.silent)
-            Observable::notifyMessage(SubjectType::Error, "Unable to parse 'rendering' configuration");
+        Observable::notifyMessage(SubjectType::Error, "Unable to parse 'rendering' configuration");
         return;
     }
 
@@ -221,7 +239,7 @@ int main(int argc, char **argv)
 
     CLI11_PARSE(app, argc, argv);
 
-    Observer observer;
+    Observer observer(silent, verbose);
     Observable::subscribe(&observer);
 
     Scene scene;
@@ -229,8 +247,6 @@ int main(int argc, char **argv)
     RenderOptions &options = scene.options;
 
     options.input = input;
-    options.verbose = verbose;
-    options.silent = silent;
 
     //
     // default settings (overridden by config JSON if specified)
@@ -267,11 +283,10 @@ int main(int argc, char **argv)
     //
     if (!config.empty()) {
         nlohmann::json configJson;
-        if (json_parse(config, &configJson, options.silent)) {
+        if (json_parse(config, &configJson)) {
             parseConfig(configJson, scene, extension);
         } else {
-            if (!options.silent)
-                Observable::notifyMessage(SubjectType::Error, "Unable to parse " + config);
+            Observable::notifyMessage(SubjectType::Error, "Unable to parse " + config);
             return 1;
         }
     }
