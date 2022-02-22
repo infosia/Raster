@@ -357,6 +357,7 @@ namespace renderer
                     } else if (material->alphaMode == AlphaMode::Blend) {
                         const auto mix = framebuffer.get(p.x, p.y);
                         const auto blend = diffuse.Af();
+                        diffuse.opeque(); // reset alpha before blending
                         auto mixColor = (diffuse * blend) + (mix * (1.f - blend));
                         diffuse.copy(mixColor);
                     }
