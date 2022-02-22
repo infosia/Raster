@@ -22,13 +22,9 @@
  */
 #include "raster.h"
 
-#include <CLI11.hpp>
-
-#include <ghc/filesystem.hpp>
-
-namespace fs = ghc::filesystem;
-
 #include "json_func.inl"
+#include <CLI11.hpp>
+#include <ghc/filesystem.hpp>
 
 using namespace renderer;
 
@@ -105,6 +101,8 @@ static void parseRendering(const nlohmann::json &rendering, Scene &scene)
             options.outline = value.get<bool>();
         } else if (key == "SSAA" && value.is_boolean()) {
             options.ssaa = value.get<bool>();
+        } else if (key == "vignette" && value.is_boolean()) {
+            options.vignette = value.get<bool>();
         } else if (key == "bgColor" && value.is_array()) {
             if (!parseColor(value, &options.background)) {
                 Observable::notifyMessage(SubjectType::Error, "Unable to parse " + key);
@@ -255,7 +253,7 @@ int main(int argc, char **argv)
     options.height = 512;
 
     // Model rotation
-    const fs::path inputPath = input;
+    const ghc::filesystem::path inputPath = input;
     const auto extension = inputPath.extension().string();
     if (extension == ".vrm") {
         options.model.rotation = glm::quat(-0.259, 0, 0.966, 0);

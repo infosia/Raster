@@ -181,7 +181,7 @@ namespace renderer
                     const float frag_depth = glm::dot(bcoords, depths);
                     if (inBounds(x, y, width, height) && frag_depth > shader->zbuffer.at(x + y * width)) {
                         Color color(0, 0, 0, 0);
-                        const auto discarded = shader->fragment(ctx, bcoords, backfacing(tri), color);
+                        const auto discarded = shader->fragment(ctx, bcoords, p, backfacing(tri), color);
                         if (discarded)
                             continue;
                         shader->zbuffer[x + y * width] = frag_depth;

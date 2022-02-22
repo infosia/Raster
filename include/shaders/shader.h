@@ -65,7 +65,7 @@ namespace renderer
         std::vector<float> zbuffer;
 
         virtual glm::vec4 vertex(const ShaderContext &ctx, const uint32_t iface, const uint32_t ivert) = 0;
-        virtual bool fragment(const ShaderContext &ctx, const glm::vec3 bar, bool backfacing, Color &color) = 0;
+        virtual bool fragment(const ShaderContext &ctx, const glm::vec3 &bar, const glm::vec3 &p, bool backfacing, Color &color) = 0;
 
         glm::mat4 skinning(const ShaderContext &ctx, const uint32_t iface, const uint32_t ivert)
         {
@@ -170,7 +170,7 @@ namespace renderer
             return glm::vec4(gl_Position, 1.f);
         }
 
-        virtual bool fragment(const ShaderContext &ctx, const glm::vec3 bar, bool backfacing, Color &color) override
+        virtual bool fragment(const ShaderContext &ctx, const glm::vec3 &bar, const glm::vec3 &p, bool backfacing, Color &color) override
         {
             if (!backfacing)
                 return true;
@@ -301,7 +301,7 @@ namespace renderer
             return ret;
         }
 
-        virtual bool fragment(const ShaderContext &ctx, const glm::vec3 bar, bool backfacing, Color &color) override
+        virtual bool fragment(const ShaderContext &ctx, const glm::vec3 &bar, const glm::vec3 &p, bool backfacing, Color &color) override
         {
             const auto UV = vUV * bar;
 
@@ -347,6 +347,11 @@ namespace renderer
 
                     if (material->alphaMode == AlphaMode::Opaque) {
                         diffuse.opeque();
+                    } else if (material->alphaMode == AlphaMode::Blend) {
+                        const auto mix = framebuffer.get(p.x, p.y);
+                        const auto blend = diffuse.Af();
+                        auto mixColor = (diffuse * blend) + (mix * (1.f - blend));
+                        diffuse.copy(mixColor);
                     }
 
                     Color newColor = color + (diffuse * material->baseColorFactor_sRGB);
