@@ -195,7 +195,7 @@ namespace renderer
             return glm::vec3(Rf() * 2.f - 1.f, Gf() * 2.f - 1.f, Bf() * 2.f - 1.f);
         }
 
-        void opeque()
+        void opaque()
         {
             rgba[3] = 255;
         }
