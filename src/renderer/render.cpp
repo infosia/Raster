@@ -198,7 +198,7 @@ namespace renderer
     {
         RenderOptions *options;
         Shader *shader;
-        ShaderContext &ctx;
+        ShaderContext *ctx;
         Node *node;
         Primitive *primitive;
     };
@@ -207,7 +207,7 @@ namespace renderer
     {
         if (node->mesh) {
             for (auto &primitive : node->mesh->primitives) {
-                RenderOp op{ &options, shader, ctx, node, &primitive };
+                RenderOp op{ &options, shader, &ctx, node, &primitive };
                 if (primitive.material && primitive.material->vrm0) {
                     const auto vrm0 = primitive.material->vrm0;
                     const auto iter = renderQueue->find(vrm0->renderQueue);
@@ -239,6 +239,8 @@ namespace renderer
         const auto node = op->node;
         const auto shader = op->shader;
 
+        auto &ctx = *op->ctx;
+
         if (node->skin)
             shader->jointMatrices = node->skin->jointMatrices.data();
         else
@@ -250,13 +252,13 @@ namespace renderer
             const uint32_t num_faces = op->primitive->numFaces();
             for (uint32_t i = 0; i < num_faces; i++) {
                 glm::vec3 tri[3] = {
-                    shader->vertex(op->ctx, i, 0),
-                    shader->vertex(op->ctx, i, 1),
-                    shader->vertex(op->ctx, i, 2),
+                    shader->vertex(ctx, i, 0),
+                    shader->vertex(ctx, i, 1),
+                    shader->vertex(ctx, i, 2),
                 };
                 const glm::vec3 depths(tri[0].z, tri[1].z, tri[2].z);
                 if (isInTriangle(tri, shader->framebuffer.width, shader->framebuffer.height)) {
-                    drawBB(shader, op->ctx, bb(tri, shader->framebuffer.width, shader->framebuffer.height), tri, depths);
+                    drawBB(shader, ctx, bb(tri, shader->framebuffer.width, shader->framebuffer.height), tri, depths);
                 }
             }
         }
@@ -362,6 +364,12 @@ namespace renderer
                 ss << "RenderQueue " << queue.first;
                 Observable::notifyMessage(SubjectType::Info, ss.str());
                 auto &ops = queue.second;
+
+                // z sort for alpha blending
+                std::sort(ops.begin(), ops.end(), [](RenderOp a, RenderOp b) {
+                    return a.primitive->center.z < b.primitive->center.z;
+                });
+
                 for (auto &op : ops) {
                     draw(&op);
                 }
