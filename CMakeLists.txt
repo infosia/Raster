@@ -46,8 +46,8 @@ endif()
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${BUILD_INCLUDES})
-target_precompile_headers(${PROJECT_NAME} PRIVATE include/pch.h)
+target_include_directories(${PROJECT_NAME} PUBLIC ${BUILD_INCLUDES})
+target_precompile_headers(${PROJECT_NAME} PUBLIC include/pch.h)
 target_link_libraries(${PROJECT_NAME} PRIVATE mikktspace)
 
 if(OpenMP_FOUND)
