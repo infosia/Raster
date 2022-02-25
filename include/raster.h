@@ -1,3 +1,5 @@
+#pragma once
+
 #include "pch.h"
 #include "observer.h"
 #include "renderer/loader.h"
