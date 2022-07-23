@@ -336,7 +336,8 @@ namespace renderer
                     auto emissiveColor = texture->get(wrappedUV.x * texture->width, wrappedUV.y * texture->height);
                     emissiveColor.transparent(); // Remove alpha influence
 
-                    Color newColor = color + (emissiveColor * material->emissiveFactor);
+                    Color newColor = (emissiveColor * material->emissiveFactor);
+                    newColor = newColor + color;
                     color.copy(newColor);
                 }
 
@@ -361,11 +362,13 @@ namespace renderer
                         // reset alpha before blending
                         diffuse.opaque();
 
-                        auto mixColor = (diffuse * blend) + (mix * (1.f - blend));
+                        auto mixColor = (mix * (1.f - blend));
+                        mixColor =(diffuse * blend) + mixColor;
                         diffuse.copy(mixColor);
                     }
 
-                    Color newColor = color + (diffuse * material->baseColorFactor_sRGB);
+                    Color newColor = diffuse * material->baseColorFactor_sRGB;
+                    newColor = color + newColor;
                     color.copy(newColor);
                 } else {
                     // base color (gamma corrected)
