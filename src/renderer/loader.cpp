@@ -292,7 +292,7 @@ namespace renderer
                 acc_POS = attr->data;
             } else if (attr->type == cgltf_attribute_type_normal) {
                 acc_NRM = attr->data;
-            } else if (attr->type == cgltf_attribute_type_texcoord) {
+            } else if (attr->type == cgltf_attribute_type_texcoord && strcmp(attr->name, "TEXCOORD_0") == 0) {
                 acc_TEX = attr->data;
             } else if (attr->type == cgltf_attribute_type_tangent) {
                 acc_TGT = attr->data;
