@@ -310,10 +310,12 @@ int main(int argc, char **argv)
     update(scene);
 
     // Morph weight
-    for (auto &mesh : scene.meshes) {
-        if (mesh.morphs.size() > 4) {
-            auto morph = &mesh.morphs.at(2);
-            morph->weight = 1.f;
+    if (config.empty()) {
+        for (auto &mesh : scene.meshes) {
+            if (mesh.morphs.size() > 4) {
+                auto morph = &mesh.morphs.at(1);
+                morph->weight = 1.f;
+            }
         }
     }
 
@@ -321,8 +323,9 @@ int main(int argc, char **argv)
     // Move camera position to center of the scene (x & y axis), and far enough (body height * 2.5) from the bounding box (z axis)
     // This differs among models and needs to be adjusted depending on the model forms.
     //
-    options.camera.translation = glm::vec3(0.f, 1.f, 4.f);
-    //options.camera.translation = glm::vec3(0.f, 1.0f, 15.f);
+    if (config.empty()) {
+        options.camera.translation = glm::vec3(0.f, 1.3f, 1.5f);
+    }
     //options.camera.translation = glm::vec3(scene.center.x, scene.center.y, (scene.bbmax.y * 2.0f));
     //options.camera.rotation = glm::quatLookAt(glm::normalize(glm::vec3(0.f, .5f, 1.f) - glm::vec3(0.f, 0.f, 0.f)), glm::vec3(0.f, 1.f, 0.f));
 
