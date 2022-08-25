@@ -546,7 +546,6 @@ namespace renderer
             const auto numJoints = skin->joints.size();
             for (size_t i = 0; i < numJoints; ++i) {
                 skin->jointMatrices[i] = getNodeMatrix(skin->joints[i]) * skin->inverseBindMatrices[i];
-                skin->jointMatrices[i] = skin->jointMatrices[i];
             }
         }
 
